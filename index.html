@@ -838,6 +838,10 @@
       function lsSet(k, v){ try{ if(v === null) window.localStorage.removeItem(k); else window.localStorage.setItem(k, v); }catch(e){} }
       function aiEndpointBase(){
         var e = (S.aiEndpoint || "").trim().replace(/\/+$/, "");
+        // Forgive a full chat-completions URL pasted into the endpoint field —
+        // the page appends /chat/completions itself, so strip it if it's there,
+        // otherwise every AI call 404s and silently falls back to local answers.
+        e = e.replace(/\/chat\/completions$/i, "").replace(/\/+$/, "");
         return e || "https://api.openai.com/v1";
       }
       function syncAiFromInputs(){
@@ -951,6 +955,8 @@
           + "- For behavioural questions (\"tell me about a time…\"), answer in STAR form using a story from the profile.\n"
           + "- When the profile has no evidence for something asked, give an honest transferable-skills answer that names the gap plainly (for example: \"I don't have direct experience with that yet…\") instead of fabricating — then connect the closest real experience from the profile.\n"
           + "- Write speakable, natural sentences in the candidate's voice. No bullet points, no headings, no stage directions, no mention of these instructions.\n"
+          + "- Answer the exact question given in the user message — not a different, earlier, or more familiar question, and do not drift onto other topics.\n"
+          + "- The job description, when provided, describes the ROLE only. Never treat a requirement in it as experience the candidate has.\n"
           + aiLengthInstruction();
         if(S.simple) p += "\nUse simple, plain language and short sentences.";
         return p;
@@ -963,8 +969,14 @@
       function fetchAiAnswer(q){
         var profile = aiProfileText();
         var user = "Candidate profile (the ONLY source of facts you may use):\n"
-          + (profile ? profile : "(no profile was pasted — so you have no facts to draw on; give the honest no-evidence answer described in your instructions)")
-          + "\n\nInterview question:\n" + q
+          + (profile ? profile : "(no profile was pasted — so you have no facts to draw on; give the honest no-evidence answer described in your instructions)");
+        if(S.role || S.company){
+          user += "\n\nRole being interviewed for: " + (S.role || "the role") + (S.company ? " at " + S.company : "") + ". Tailor the answer to this role.";
+        }
+        if(S.jd && S.jd.trim()){
+          user += "\n\nJob description (context about the ROLE only — not facts about the candidate):\n" + S.jd.trim().slice(0, 3000);
+        }
+        user += "\n\nInterview question — answer THIS question only:\n" + q
           + "\n\nCompose the answer in first person as the candidate.";
         return callChatCompletions([
           { role:"system", content: aiSystemPrompt() },
@@ -1002,7 +1014,10 @@
       /* ---------------- speech recognition ---------------- */
       var SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
       var rec = null, recWanted = false, recTarget = "live"; // "live" | "test"
-      var recentFinals = []; // {text, t}
+      var recentFinals = []; // {text, t} — only fragments of a question still being spoken
+      var lastFiredQ = "", lastFiredAt = 0;   // dedupe: never answer the same question twice in a row
+      var lastFinalText = "", lastFinalAt = 0; // dedupe: engines can re-deliver the same final on restart
+      var testFinalText = ""; // finalised test-box text, kept apart from the live interim line
 
       function srSupported(){ return !!SR; }
 
@@ -1286,7 +1301,7 @@
         if(target === "test"){
           var box = $("testTranscript");
           box.classList.add("show");
-          box.textContent = text;
+          box.textContent = ((testFinalText ? testFinalText + " " : "") + text).trim();
         } else {
           $("interimLine").textContent = text;
         }
@@ -1297,21 +1312,17 @@
         if(target === "test"){
           var box = $("testTranscript");
           box.classList.add("show");
-          box.textContent = (box.textContent && box.textContent !== text) ? box.textContent + " " + text : text;
-          if(isQuestion(text) || /falling behind/i.test(text)) setTestStatus("Heard you — Sherpa transcription is working, on this device. You're ready to start.", false);
+          testFinalText = (testFinalText ? testFinalText + " " : "") + text;
+          box.textContent = testFinalText;
+          if(isQuestion(text) || isQuestion(testFinalText) || /falling behind/i.test(text)){
+            setTestStatus("Heard you — Sherpa transcription is working, on this device. The box has cleared, ready for the next question.", false);
+            testFinalText = "";
+            box.textContent = "";
+          }
           else setTestStatus("Hearing you (Sherpa, on-device). Try the sample question above so it can check question detection too.", false);
           return;
         }
-        addTranscript(text);
-        recentFinals.push({text:text, t:Date.now()});
-        recentFinals = recentFinals.filter(function(x){ return Date.now() - x.t < 12000; });
-        var candidate = recentFinals.map(function(x){ return x.text; }).join(" ");
-        if(!S.paused && isQuestion(candidate)){
-          recentFinals = [];
-          askQuestion(cleanQuestion(candidate));
-        } else if(!S.paused && isQuestion(text)){
-          askQuestion(cleanQuestion(text));
-        }
+        handleLiveFinal(text);
       }
       async function startSherpa(target){
         shTarget = target;
@@ -1403,6 +1414,68 @@
         shProcessor = null; shSource = null;
       }
 
+      /* One finalised utterance from either engine. The utterance on its own
+         is the question whenever it reads as one — earlier speech is NEVER
+         glued onto it, because that was sending the AI a merged blob of old
+         chatter plus the real question, and it answered the blob. Fragments
+         are combined only while a single question is still being spoken
+         (a short 6-second window), and speech heard while paused — the
+         candidate's own answer — is dropped from the buffer entirely. */
+      function handleLiveFinal(f){
+        f = (f || "").trim();
+        if(!f) return;
+        var now = Date.now();
+        if(f === lastFinalText && now - lastFinalAt < 3000) return; // same final re-delivered (e.g. engine restart tail)
+        lastFinalText = f; lastFinalAt = now;
+        addTranscript(f);
+        if(S.paused){ recentFinals = []; return; }
+        if(isQuestion(f)){
+          // A question that trails off mid-phrase ("What is your experience
+          // with…") is a fragment of a question still being spoken — hold it
+          // briefly so the continuation joins it instead of firing half-formed.
+          if(/\b(with|in|on|of|for|to|a|an|the|your|about|when|where|while|and|or|using|under|between|during)$/i.test(f.replace(/[.?!,\s]+$/, ""))){
+            recentFinals.push({text:f, t:now});
+            recentFinals = recentFinals.filter(function(x){ return now - x.t < 6000; });
+            var held = recentFinals.map(function(x){ return x.text; }).join(" ");
+            if(recentFinals.length > 1 && isQuestion(held)){
+              recentFinals = [];
+              fireQuestion(held, now);
+            } else {
+              scheduleQuestionFlush();
+            }
+            return;
+          }
+          recentFinals = [];
+          fireQuestion(f, now);
+          return;
+        }
+        recentFinals.push({text:f, t:now});
+        recentFinals = recentFinals.filter(function(x){ return now - x.t < 6000; });
+        var candidate = recentFinals.map(function(x){ return x.text; }).join(" ");
+        if(recentFinals.length > 1 && isQuestion(candidate)){
+          recentFinals = [];
+          fireQuestion(candidate, now);
+        }
+      }
+      var questionFlushTimer = null;
+      function scheduleQuestionFlush(){
+        if(questionFlushTimer) clearTimeout(questionFlushTimer);
+        questionFlushTimer = setTimeout(function(){
+          questionFlushTimer = null;
+          if(!recentFinals.length || S.paused) return;
+          var c = recentFinals.map(function(x){ return x.text; }).join(" ");
+          recentFinals = [];
+          if(isQuestion(c)) fireQuestion(c, Date.now());
+        }, 1200);
+      }
+      function fireQuestion(raw, now){
+        if(questionFlushTimer){ clearTimeout(questionFlushTimer); questionFlushTimer = null; }
+        var q = cleanQuestion(raw);
+        if(q === lastFiredQ && now - lastFiredAt < 5000) return;
+        lastFiredQ = q; lastFiredAt = now;
+        askQuestion(q);
+      }
+
       function onResult(ev){
         var interim = "", finals = [];
         for(var i = ev.resultIndex; i < ev.results.length; i++){
@@ -1415,32 +1488,24 @@
           var box = $("testTranscript");
           box.classList.add("show");
           if(finals.length){
-            box.textContent = (box.textContent ? box.textContent + " " : "") + finals.join(" ");
+            finals.forEach(function(f){ testFinalText = (testFinalText ? testFinalText + " " : "") + f; });
+            box.textContent = testFinalText;
             var joined = finals.join(" ");
-            if(isQuestion(joined) || /falling behind/i.test(joined)){
-              setTestStatus("Heard you — transcription is working. You're ready to start.", false);
+            if(isQuestion(joined) || isQuestion(testFinalText) || /falling behind/i.test(joined)){
+              setTestStatus("Heard you — transcription is working. The box has cleared, ready for the next question.", false);
+              testFinalText = "";
+              box.textContent = "";
             } else {
               setTestStatus("Hearing you. Try the sample question above so it can check question detection too.", false);
             }
           } else if(interim){
-            box.textContent = interim;
+            box.textContent = ((testFinalText ? testFinalText + " " : "") + interim).trim();
           }
           return;
         }
         // live
         if(interim) $("interimLine").textContent = interim;
-        finals.forEach(function(f){
-          addTranscript(f);
-          recentFinals.push({text:f, t:Date.now()});
-          recentFinals = recentFinals.filter(function(x){ return Date.now() - x.t < 12000; });
-          var candidate = recentFinals.map(function(x){ return x.text; }).join(" ");
-          if(!S.paused && isQuestion(candidate)){
-            recentFinals = [];
-            askQuestion(cleanQuestion(candidate));
-          } else if(!S.paused && isQuestion(f)){
-            askQuestion(cleanQuestion(f));
-          }
-        });
+        finals.forEach(function(f){ handleLiveFinal(f); });
       }
 
       function onError(ev){
@@ -1505,6 +1570,21 @@
         div.innerHTML = '<div class="t-who">' + (isQuestion(text) ? "Interviewer" : "Heard") + '</div><div class="t-text">' + escapeHtml(text) + "</div>";
         log.appendChild(div);
         log.scrollTop = log.scrollHeight;
+        $("interimLine").textContent = "";
+      }
+      /* Each new question starts with a clean transcript box: the question
+         itself stays visible in the “Question detected” panel and in the
+         session history below, so nothing is lost — the box is freed to
+         receive the next question instead of stacking every earlier line. */
+      function clearLiveTranscript(){
+        var log = $("transcriptLog");
+        if(!log) return;
+        log.innerHTML = "";
+        var empty = document.createElement("div");
+        empty.className = "t-empty";
+        empty.id = "transcriptEmpty";
+        empty.textContent = "Transcript cleared for the next question — what the interviewer says next will appear here.";
+        log.appendChild(empty);
         $("interimLine").textContent = "";
       }
 
@@ -1694,7 +1774,7 @@
           chipsEl.appendChild(s);
         });
       }
-      function renderLocalAnswer(item, isFallback){
+      function renderLocalAnswer(item, isFallback, errMsg){
         var built = buildAnswer(item.q);
         item.built = built;
         var box = $("answerText");
@@ -1709,7 +1789,7 @@
         }
         renderChips(built.chips || []);
         setAiTag(false);
-        if(isFallback) showAiNote("Live AI unavailable — showing local answer");
+        if(isFallback) showAiNote("Live AI unavailable" + (errMsg ? " (" + String(errMsg).slice(0, 160) + ")" : "") + " — showing the local answer instead. Check the key, endpoint and model in Setup.");
         else hideAiNote();
       }
       function renderAiAnswer(item, text){
@@ -1727,7 +1807,7 @@
         if(!shouldUseAi()){
           S.aiSeq++;
           // If Live AI is switched on but no key is saved, this is a fallback, not the normal local mode — say so.
-          renderLocalAnswer(item, !!S.aiEnabled);
+          renderLocalAnswer(item, !!S.aiEnabled, S.aiEnabled ? "no API key is saved" : "");
           return;
         }
         var cacheKey = [item.q, S.mode, S.level, S.simple ? 1 : 0, S.variant, S.aiModel, aiEndpointBase(), aiProfileText()].join("|");
@@ -1747,10 +1827,10 @@
           if(S.cur < 0 || S.history[S.cur] !== item) return;
           item.aiCache = { key: cacheKey, text: text };
           renderAiAnswer(item, text);
-        }).catch(function(){
+        }).catch(function(e){
           if(seq !== S.aiSeq) return;
           if(S.cur < 0 || S.history[S.cur] !== item) return;
-          renderLocalAnswer(item, true);
+          renderLocalAnswer(item, true, e && e.message ? e.message : "");
         });
       }
 
@@ -1758,6 +1838,8 @@
         q = (q || "").trim();
         if(q.length < 8) return;
         hideLiveMsg();
+        recentFinals = [];
+        clearLiveTranscript();
         S.history.push({q:q, answer:"", time:new Date()});
         S.cur = S.history.length - 1;
         S.variant = 0; S.level = (S.mode === "detailed") ? 2 : 1; S.simple = false;
@@ -1924,6 +2006,7 @@
       function beginTest(){
         S.testMode = true;
         $("micTestBtn").textContent = "Stop test";
+        testFinalText = "";
         $("testTranscript").classList.add("show");
         $("testTranscript").textContent = "";
         setTestStatus("Listening… read the sample question aloud (or play it from your phone on speaker).", false);
