@@ -1,0 +1,1734 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" href="data:," />
+    <title>Interview Copilot Live</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      :root{
+        --bg:#06231a; --bg2:#082b1f; --panel:#0c3524; --panel2:#092a1d;
+        --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.16);
+        --lime:#c9f24e; --lime-dim:#a8d63a; --lime-ink:#16240a;
+        --text:#f0f6f0; --dim:#a7c3b2; --faint:#7fa18d;
+        --cream:#f6f2e8; --cream-card:#fffdf6; --ink:#182720; --ink-dim:#5c6f64;
+        --red:#e5484d; --amber:#f5b942; --ok:#7dd87d;
+        --answer-size:1.35rem;
+        --radius:14px;
+      }
+      *{ box-sizing:border-box; }
+      html,body{ margin:0; padding:0; }
+      body{
+        font-family:"Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+        background:
+          radial-gradient(1100px 500px at 85% -10%, rgba(201,242,78,.07), transparent 60%),
+          linear-gradient(180deg, var(--bg2), var(--bg) 320px);
+        color:var(--text);
+        -webkit-font-smoothing:antialiased;
+      }
+      button, input, textarea, select{ font:inherit; }
+      button{ min-height:2.5rem; cursor:pointer; }
+      input:not([type="radio"]), textarea{ min-height:2.5rem; }
+      .wrap{ max-width:1180px; margin:0 auto; padding:0 16px 48px; }
+
+      /* ---------- top bar ---------- */
+      .topbar{
+        display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+        padding:16px 2px 14px;
+      }
+      .brand{ display:flex; align-items:center; gap:11px; }
+      .brand-mark{
+        width:38px; height:38px; border-radius:10px; background:var(--lime);
+        display:flex; align-items:center; justify-content:center; flex:none;
+      }
+      .brand-mark svg{ display:block; }
+      .brand-name{ font-weight:800; font-size:1.02rem; line-height:1.15; letter-spacing:-.01em; }
+      .brand-sub{ font-size:.78rem; color:var(--dim); font-weight:600; }
+      .topbar-right{ margin-left:auto; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+      .session-label{
+        font-size:.85rem; font-weight:700; color:var(--text);
+        background:rgba(255,255,255,.06); border:1px solid var(--line);
+        padding:8px 13px; border-radius:999px;
+      }
+      .session-label:empty{ display:none; }
+      .live-pill{
+        display:none; align-items:center; gap:7px; font-size:.8rem; font-weight:800;
+        color:var(--lime); letter-spacing:.04em; text-transform:uppercase;
+      }
+      .live-pill.on{ display:inline-flex; }
+      .live-dot{ width:9px; height:9px; border-radius:50%; background:var(--lime); box-shadow:0 0 0 0 rgba(201,242,78,.5); animation:pulse 1.8s infinite; }
+      @keyframes pulse{ 0%{ box-shadow:0 0 0 0 rgba(201,242,78,.45);} 70%{ box-shadow:0 0 0 9px rgba(201,242,78,0);} 100%{ box-shadow:0 0 0 0 rgba(201,242,78,0);} }
+      @media (prefers-reduced-motion: reduce){ .live-dot{ animation:none; } }
+
+      /* ---------- setup (cream) ---------- */
+      .setup{
+        background:var(--cream); color:var(--ink); border-radius:20px;
+        padding:26px 26px 22px; box-shadow:0 24px 60px rgba(0,0,0,.35);
+      }
+      .setup h1{ margin:0 0 6px; font-size:1.65rem; font-weight:800; letter-spacing:-.02em; }
+      .setup .lede{ margin:0 0 4px; color:var(--ink-dim); font-size:.98rem; max-width:62ch; }
+      .privacy-note{
+        display:flex; gap:9px; align-items:flex-start; margin:14px 0 20px;
+        background:#eef3df; border:1px solid #d9e4ba; border-radius:12px; padding:11px 14px;
+        font-size:.88rem; color:#3c4a2e;
+      }
+      .privacy-note svg{ flex:none; margin-top:1px; }
+      .setup-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+      .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+      .field label{ font-size:.82rem; font-weight:800; letter-spacing:.02em; }
+      .field label .opt{ font-weight:600; color:var(--ink-dim); }
+      .field .hint{ font-size:.8rem; color:var(--ink-dim); }
+      .setup input[type="text"], .setup textarea{
+        border:1.5px solid #d8d2c2; border-radius:12px; background:var(--cream-card);
+        padding:11px 13px; color:var(--ink); width:100%; resize:vertical;
+      }
+      .setup input[type="text"]:focus, .setup textarea:focus{
+        outline:2px solid var(--lime-dim); outline-offset:1px; border-color:var(--lime-dim);
+      }
+      textarea::placeholder, input::placeholder{ color:#9aa294; }
+      .profile-row{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:2px 0 20px; }
+      .btn{
+        border:none; border-radius:999px; font-weight:800; padding:10px 20px;
+        display:inline-flex; align-items:center; gap:8px; justify-content:center;
+      }
+      .btn-dark{ background:#0d3524; color:#fff; }
+      .btn-dark:hover{ background:#11452f; }
+      .btn-lime{ background:var(--lime); color:var(--lime-ink); }
+      .btn-lime:hover{ background:#d6f76b; }
+      .btn-ghost{
+        background:transparent; color:var(--text); border:1.5px solid var(--line2);
+      }
+      .btn-ghost:hover{ border-color:var(--lime); color:var(--lime); }
+      .btn-ghost.light{ color:var(--ink); border-color:#c9c2ae; }
+      .btn-ghost.light:hover{ border-color:#0d3524; color:#0d3524; }
+      .btn-red{ background:var(--red); color:#fff; }
+      .btn-red:hover{ background:#c93a3f; }
+      .btn[disabled]{ opacity:.45; cursor:not-allowed; }
+      .fact-status{ font-size:.88rem; font-weight:700; color:#3c5a24; }
+      .fact-status.warn{ color:#8a5a12; }
+
+      .setup-cards{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px; }
+      .card{
+        background:var(--cream-card); border:1px solid #e3ddcc; border-radius:var(--radius);
+        padding:16px 18px;
+      }
+      .card h2{ margin:0 0 4px; font-size:.98rem; font-weight:800; display:flex; align-items:center; gap:8px; }
+      .card .sub{ margin:0 0 12px; font-size:.83rem; color:var(--ink-dim); }
+      .check-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:9px; }
+      .check-list li{ display:flex; gap:10px; align-items:flex-start; font-size:.9rem; font-weight:600; }
+      .check-list .tick{
+        flex:none; width:21px; height:21px; border-radius:50%; background:#0d3524; color:var(--lime);
+        display:flex; align-items:center; justify-content:center; margin-top:1px;
+      }
+      .sample-q{
+        margin-top:13px; background:#f1edde; border-radius:10px; padding:10px 12px;
+        font-size:.88rem; font-style:italic; color:#41413a;
+      }
+      .diag-list{ display:flex; flex-direction:column; gap:9px; margin-bottom:12px; }
+      .diag-row{ display:flex; align-items:center; gap:10px; font-size:.9rem; font-weight:600; }
+      .diag-dot{ width:11px; height:11px; border-radius:50%; flex:none; background:#c9c2ae; }
+      .diag-dot.ok{ background:#4caf50; }
+      .diag-dot.bad{ background:var(--red); }
+      .diag-row .val{ margin-left:auto; font-weight:800; font-size:.85rem; text-align:right; }
+      .diag-msg{
+        display:none; font-size:.86rem; background:#fdecec; border:1px solid #f3c2c4; color:#7c2226;
+        border-radius:10px; padding:10px 12px; margin-bottom:12px;
+      }
+      .diag-msg.show{ display:block; }
+      .engine-list{ display:flex; flex-direction:column; gap:9px; }
+      .engine-opt{
+        display:flex; gap:11px; align-items:flex-start; border:1.5px solid #ddd6c4; border-radius:12px;
+        padding:11px 13px; cursor:pointer; background:#fff;
+      }
+      .engine-opt.sel{ border-color:#0d3524; background:#f2f6e4; }
+      .engine-opt.disabled{ opacity:.62; cursor:not-allowed; background:#f4f1e7; }
+      .engine-opt input{ margin-top:3px; width:18px; height:18px; accent-color:#0d3524; flex:none; }
+      .engine-opt .e-name{ font-weight:800; font-size:.92rem; }
+      .engine-opt .e-desc{ font-size:.82rem; color:var(--ink-dim); margin-top:2px; }
+      .test-area{ margin-top:14px; }
+      .test-transcript{
+        display:none; margin-top:10px; background:#0d3524; color:#eaf3ea; border-radius:10px;
+        padding:11px 13px; font-size:.92rem; min-height:44px;
+      }
+      .test-transcript.show{ display:block; }
+      .test-status{ font-size:.87rem; font-weight:700; margin-top:9px; color:#3c5a24; }
+      .test-status.err{ color:#9c2b2e; }
+      .sherpa-progress{ display:none; margin-top:12px; }
+      .sherpa-progress.show{ display:block; }
+      .sherpa-bar{ height:10px; border-radius:999px; background:#e3ddcc; overflow:hidden; }
+      .sherpa-bar i{ display:block; height:100%; width:0%; background:#0d3524; border-radius:999px; transition:width .25s ease; }
+      .sherpa-status{ font-size:.85rem; font-weight:700; margin-top:7px; color:#3c5a24; }
+      .sherpa-status.err{ color:#9c2b2e; }
+      .sherpa-dl{ margin-top:12px; }
+      .mode-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:20px; }
+      .mode-row .m-label{ font-size:.82rem; font-weight:800; letter-spacing:.02em; width:100%; }
+      .seg{ display:inline-flex; background:#e9e4d2; border-radius:999px; padding:4px; gap:2px; flex-wrap:wrap; }
+      .seg button{
+        border:none; background:transparent; border-radius:999px; padding:7px 16px;
+        font-weight:700; font-size:.88rem; color:var(--ink-dim); min-height:2.3rem;
+      }
+      .seg button.sel{ background:#0d3524; color:var(--lime); }
+      .honest-notes{ font-size:.83rem; color:var(--ink-dim); border-top:1px solid #e3ddcc; padding-top:14px; margin-top:2px; }
+      .honest-notes p{ margin:0 0 6px; }
+      .start-row{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:16px; }
+      .btn-start{ font-size:1.02rem; padding:13px 28px; }
+      .start-hint{ font-size:.85rem; color:var(--ink-dim); font-weight:600; }
+
+      /* ---------- live ---------- */
+      .live{ display:none; }
+      .live.on{ display:block; }
+      .live-head{
+        display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+        padding:6px 2px 14px;
+      }
+      .live-title{ font-size:1.15rem; font-weight:800; letter-spacing:-.01em; }
+      .live-title .role{ color:var(--dim); font-weight:600; font-size:.95rem; }
+      .status-chip{
+        display:inline-flex; align-items:center; gap:7px; font-size:.82rem; font-weight:800;
+        padding:7px 13px; border-radius:999px; border:1px solid var(--line2); color:var(--dim);
+      }
+      .status-chip.listening{ color:var(--lime); border-color:rgba(201,242,78,.4); }
+      .status-chip.paused{ color:var(--amber); border-color:rgba(245,185,66,.4); }
+      .status-chip.error{ color:#ff9d9f; border-color:rgba(229,72,77,.5); }
+      .timer{
+        font-variant-numeric:tabular-nums; font-weight:800; font-size:1.05rem;
+        background:rgba(255,255,255,.06); border:1px solid var(--line); border-radius:10px; padding:7px 13px;
+      }
+      .live-head .spacer{ margin-left:auto; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+      .engine-tag{ font-size:.8rem; color:var(--faint); font-weight:700; }
+
+      .live-grid{ display:grid; grid-template-columns:5fr 7fr; gap:14px; align-items:start; }
+      .panel{
+        background:var(--panel); border:1px solid var(--line); border-radius:16px;
+        padding:18px; min-height:200px;
+      }
+      .panel-head{ display:flex; align-items:center; gap:9px; margin-bottom:12px; }
+      .panel-head h2{ margin:0; font-size:.92rem; font-weight:800; letter-spacing:.02em; }
+      .panel-head .tag{
+        margin-left:auto; font-size:.74rem; font-weight:700; color:var(--faint);
+        border:1px solid var(--line); border-radius:999px; padding:4px 10px; text-align:right;
+      }
+      .transcript-log{ display:flex; flex-direction:column; gap:12px; max-height:430px; overflow-y:auto; padding-right:4px; }
+      .t-entry .t-who{ font-size:.74rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin-bottom:3px; }
+      .t-entry.q .t-who{ color:var(--lime); }
+      .t-entry .t-text{ font-size:.98rem; line-height:1.5; color:var(--text); }
+      .t-interim{ color:var(--faint); font-style:italic; font-size:.95rem; min-height:1.4em; }
+      .t-empty{ color:var(--faint); font-size:.92rem; }
+      .current-q{
+        background:rgba(201,242,78,.08); border:1px solid rgba(201,242,78,.25); border-radius:12px;
+        padding:12px 14px; margin-bottom:14px; display:none;
+      }
+      .current-q.show{ display:block; }
+      .current-q .cq-label{ font-size:.72rem; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--lime); margin-bottom:4px; }
+      .current-q .cq-text{ font-size:1.02rem; font-weight:700; line-height:1.45; }
+      .answer-text{
+        font-size:var(--answer-size); line-height:1.55; font-weight:600; color:#fbfefb;
+        white-space:pre-wrap; min-height:120px;
+      }
+      .answer-text .star-line{ display:block; margin-bottom:.35em; }
+      .answer-text .star-k{ color:var(--lime); font-weight:800; }
+      .answer-empty{ color:var(--faint); font-size:1rem; line-height:1.55; }
+      .chips{ display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; }
+      .chips:empty{ display:none; }
+      .chip{
+        display:inline-flex; align-items:center; gap:6px; font-size:.8rem; font-weight:700;
+        background:rgba(201,242,78,.1); color:#dff59a; border:1px solid rgba(201,242,78,.25);
+        border-radius:999px; padding:6px 12px;
+      }
+      .answer-controls{ display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; }
+      .answer-controls .btn{ padding:8px 15px; font-size:.86rem; min-height:2.4rem; }
+      .fontsize-ctl{ display:inline-flex; gap:6px; margin-left:auto; }
+      .fontsize-ctl button{
+        width:40px; min-height:2.4rem; border-radius:10px; border:1.5px solid var(--line2);
+        background:transparent; color:var(--text); font-weight:800;
+      }
+      .fontsize-ctl button:hover{ border-color:var(--lime); color:var(--lime); }
+      .live-msg{
+        display:none; margin-top:14px; border-radius:12px; padding:11px 14px; font-size:.9rem; font-weight:600;
+        background:rgba(229,72,77,.12); border:1px solid rgba(229,72,77,.4); color:#ffc9ca;
+      }
+      .live-msg.show{ display:block; }
+      .live-msg.info{ background:rgba(201,242,78,.08); border-color:rgba(201,242,78,.3); color:#e6f7bd; }
+
+      .manual-bar{
+        margin-top:14px; background:var(--panel2); border:1px solid var(--line); border-radius:16px; padding:14px;
+        display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+      }
+      .manual-bar label{ font-size:.82rem; font-weight:800; letter-spacing:.03em; width:100%; color:var(--dim); }
+      .manual-bar input{
+        flex:1 1 260px; background:rgba(255,255,255,.05); border:1.5px solid var(--line2);
+        border-radius:12px; color:var(--text); padding:11px 14px;
+      }
+      .manual-bar input:focus{ outline:2px solid var(--lime); outline-offset:1px; }
+
+      .history-panel{ margin-top:14px; background:var(--panel2); border:1px solid var(--line); border-radius:16px; padding:16px 18px; }
+      .history-panel h2{ margin:0; font-size:.92rem; font-weight:800; }
+      .history-nav{ display:flex; gap:8px; align-items:center; }
+      .history-nav button{
+        border:1.5px solid var(--line2); background:transparent; color:var(--text); border-radius:10px;
+        padding:6px 14px; font-weight:700; min-height:2.3rem;
+      }
+      .history-nav button:hover:not([disabled]){ border-color:var(--lime); color:var(--lime); }
+      .history-nav button[disabled]{ opacity:.4; cursor:not-allowed; }
+      .history-head{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+      .history-head .spacer{ margin-left:auto; }
+      .history-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; }
+      .history-list li button{
+        width:100%; text-align:left; background:rgba(255,255,255,.04); border:1px solid var(--line);
+        border-radius:10px; padding:10px 13px; color:var(--text); font-weight:600; font-size:.92rem;
+        display:flex; gap:10px; align-items:baseline; min-height:2.6rem;
+      }
+      .history-list li button:hover{ border-color:var(--lime); }
+      .history-list li button.sel{ border-color:var(--lime); background:rgba(201,242,78,.08); }
+      .history-list .h-num{ color:var(--lime); font-weight:800; flex:none; }
+      .history-list .h-time{ color:var(--faint); font-size:.78rem; flex:none; margin-left:auto; }
+      .history-empty{ color:var(--faint); font-size:.9rem; }
+
+      .bottom-bar{
+        position:sticky; bottom:12px; margin-top:14px;
+        background:rgba(7,32,23,.92); backdrop-filter:blur(8px);
+        border:1px solid var(--line2); border-radius:18px; padding:12px 14px;
+        display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+        box-shadow:0 16px 40px rgba(0,0,0,.4);
+      }
+      .mic-btn{
+        width:62px; height:62px; min-height:62px; border-radius:50%; border:none; flex:none;
+        background:#3a4a3e; color:#cfd8cf; display:flex; align-items:center; justify-content:center;
+      }
+      .mic-btn.on{ background:var(--lime); color:var(--lime-ink); box-shadow:0 0 0 6px rgba(201,242,78,.18); }
+      .mic-state{ display:flex; flex-direction:column; gap:1px; min-width:130px; }
+      .mic-state .ms-top{ font-weight:800; font-size:.95rem; }
+      .mic-state .ms-sub{ font-size:.78rem; color:var(--dim); }
+      .bar-sep{ width:1px; align-self:stretch; background:var(--line2); margin:4px 2px; }
+      .toggle-btn{
+        border:1.5px solid var(--line2); background:transparent; color:var(--text);
+        border-radius:999px; padding:9px 16px; font-weight:800; font-size:.88rem;
+        display:inline-flex; align-items:center; gap:8px;
+      }
+      .toggle-btn .dot{ width:9px; height:9px; border-radius:50%; background:var(--faint); flex:none; }
+      .toggle-btn[aria-pressed="true"]{ border-color:var(--lime); color:var(--lime); }
+      .toggle-btn[aria-pressed="true"] .dot{ background:var(--lime); }
+      .toggle-btn.pause-btn{ font-size:.95rem; padding:11px 20px; }
+      .toggle-btn.pause-btn[aria-pressed="true"]{ background:var(--amber); border-color:var(--amber); color:#2b1e02; }
+      .toggle-btn.pause-btn[aria-pressed="true"] .dot{ background:#2b1e02; }
+      .bottom-bar .bb-right{ margin-left:auto; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+
+      @media (max-width:820px){
+        .setup{ padding:20px 16px; }
+        .setup-grid, .setup-cards{ grid-template-columns:1fr; }
+        .live-grid{ grid-template-columns:1fr; }
+        .transcript-log{ max-height:260px; }
+        :root{ --answer-size:1.18rem; }
+        .mic-state{ min-width:0; }
+        .bar-sep{ display:none; }
+        .bottom-bar .bb-right{ margin-left:0; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3v10" stroke="#16240a" stroke-width="2.6" stroke-linecap="round"/><path d="M6.5 8.5a8 8 0 1 0 11 0" stroke="#16240a" stroke-width="2.6" stroke-linecap="round"/><circle cx="12" cy="10" r="2.2" fill="#16240a"/></svg>
+          </div>
+          <div>
+            <div class="brand-name">Interview Copilot Live</div>
+            <div class="brand-sub">Standalone live page — open it directly in Chrome or Edge</div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <span class="session-label" id="sessionLabel"></span>
+          <span class="live-pill" id="livePill"><span class="live-dot"></span>Live</span>
+        </div>
+      </header>
+
+      <!-- ================= SETUP ================= -->
+      <section class="setup" id="setupView" aria-label="Session setup">
+        <h1>Set up your live session</h1>
+        <p class="lede">Paste the approved profile you prepared in the full Interview Copilot, then start. This page keeps everything in this tab only — close or reload it and it's gone.</p>
+        <div class="privacy-note">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2" stroke="#3c4a2e" stroke-width="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="#3c4a2e" stroke-width="2"/></svg>
+          <span><strong>Private by design:</strong> this page ships empty — no profile, no resume, nothing about you is built in. What you paste below stays in this browser tab's memory. It is never saved and never sent anywhere by this page.</span>
+        </div>
+
+        <div class="setup-grid">
+          <div class="field">
+            <label for="companyInput">Company</label>
+            <input type="text" id="companyInput" placeholder="e.g. the company you're interviewing with" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="roleInput">Role</label>
+            <input type="text" id="roleInput" placeholder="e.g. the job title on the posting" autocomplete="off" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="profileInput">My approved profile / facts summary</label>
+          <textarea id="profileInput" rows="8" placeholder="Paste your approved facts here — one fact per line works best. Example format only:&#10;• Coordinated weekly status meetings for a cross-functional team&#10;• Prepared progress reports and tracked action items to closure&#10;Replace those examples with your own approved facts before you start."></textarea>
+          <span class="hint">Answers are built only from these lines. If a fact isn't pasted here, the copilot won't claim it.</span>
+        </div>
+        <div class="profile-row">
+          <button class="btn btn-dark" id="useProfileBtn" type="button">Use this profile</button>
+          <span class="fact-status" id="factStatus">No profile loaded yet — you can still run a session, but answers will have nothing to draw on.</span>
+        </div>
+
+        <div class="field">
+          <label for="jdInput">Job description <span class="opt">(optional)</span></label>
+          <textarea id="jdInput" rows="4" placeholder="Paste the job description here. It's used only to understand what the role emphasises — a requirement in the job description is never treated as one of your skills."></textarea>
+        </div>
+
+        <div class="mode-row">
+          <span class="m-label" id="modeLabel">Answer mode</span>
+          <div class="seg" role="group" aria-labelledby="modeLabel" id="modeSeg">
+            <button type="button" data-mode="quick">Quick</button>
+            <button type="button" data-mode="standard" class="sel">Standard</button>
+            <button type="button" data-mode="detailed">Detailed</button>
+            <button type="button" data-mode="star">STAR</button>
+          </div>
+        </div>
+
+        <div class="setup-cards">
+          <div class="card">
+            <h2>Phone-on-speaker checklist</h2>
+            <p class="sub">Interview on your phone, copilot on this computer. Run through these before you start:</p>
+            <ul class="check-list">
+              <li><span class="tick"><svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M4 12.5 9.5 18 20 6.5" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Phone on speakerphone</li>
+              <li><span class="tick"><svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M4 12.5 9.5 18 20 6.5" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>No earbuds or headphones — the computer must hear the interviewer</li>
+              <li><span class="tick"><svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M4 12.5 9.5 18 20 6.5" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Phone 30–60 cm from the computer microphone</li>
+              <li><span class="tick"><svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M4 12.5 9.5 18 20 6.5" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Phone volume turned up</li>
+              <li><span class="tick"><svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M4 12.5 9.5 18 20 6.5" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Quiet room — no TV, fan or other voices</li>
+            </ul>
+            <div class="sample-q">Mic test question — read it aloud, or play it from your phone on speaker: “Tell me about a time you managed a project that was falling behind schedule.”</div>
+            <div class="test-area">
+              <button class="btn btn-dark" id="micTestBtn" type="button">Test microphone</button>
+              <div class="test-transcript" id="testTranscript" aria-live="polite"></div>
+              <div class="test-status" id="testStatus" role="status"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Can this page listen here?</h2>
+            <p class="sub">Four separate checks — re-run automatically when you test or start.</p>
+            <div class="diag-list">
+              <div class="diag-row"><span class="diag-dot" id="diagWasmDot"></span>WebAssembly<span class="val" id="diagWasmVal">—</span></div>
+              <div class="diag-row"><span class="diag-dot" id="diagMicDot"></span>Microphone API<span class="val" id="diagMicVal">—</span></div>
+              <div class="diag-row"><span class="diag-dot" id="diagHttpsDot"></span>Secure page (HTTPS)<span class="val" id="diagHttpsVal">—</span></div>
+              <div class="diag-row"><span class="diag-dot" id="diagPermDot"></span>Microphone permission<span class="val" id="diagPermVal">—</span></div>
+            </div>
+            <div class="diag-msg" id="diagMsg" role="alert"></div>
+            <button class="btn btn-ghost light" id="recheckBtn" type="button">Re-check now</button>
+
+            <h2 style="margin-top:20px;">Transcription engine</h2>
+            <p class="sub">Web Speech is primary. Sherpa is the local backup — pick it if Web Speech's speech service fails.</p>
+            <div class="engine-list" role="radiogroup" aria-label="Transcription engine">
+              <label class="engine-opt sel" id="engineWebspeechOpt">
+                <input type="radio" name="engine" value="webspeech" checked />
+                <span><span class="e-name">Web Speech API — primary</span>
+                <span class="e-desc" style="display:block;">Built into Chrome and Edge. Live, word-by-word transcription with interim results. In Chrome, recognition runs through Google's speech service.</span></span>
+              </label>
+              <label class="engine-opt" id="engineSherpaOpt">
+                <input type="radio" name="engine" value="sherpa" />
+                <span><span class="e-name">Sherpa-ONNX (local) — backup</span>
+                <span class="e-desc" style="display:block;">Open-source streaming recognition (sherpa-onnx v1.10.46 WebAssembly + streaming Zipformer English model, 20M int8) that runs entirely on this device — no cloud speech service, so it still works when Web Speech's service refuses. Needs a one-time ~55&nbsp;MB download (~44&nbsp;MB model data + ~11&nbsp;MB runtime), loaded only when you choose Sherpa; your browser caches it after that. It still needs the same microphone Allow as Web Speech — it bypasses the speech <em>service</em>, not a mic Block.</span></span>
+              </label>
+              <label class="engine-opt" id="engineManualOpt">
+                <input type="radio" name="engine" value="manual" />
+                <span><span class="e-name">Manual entry only</span>
+                <span class="e-desc" style="display:block;">No listening at all. Type or paste each question and get the suggested answer.</span></span>
+              </label>
+            </div>
+            <div class="sherpa-progress" id="sherpaProgress">
+              <div class="sherpa-bar"><i id="sherpaBarFill"></i></div>
+              <div class="sherpa-status" id="sherpaStatus" role="status"></div>
+            </div>
+            <button class="btn btn-dark sherpa-dl" id="sherpaLoadBtn" type="button">Download Sherpa (~55 MB)</button>
+          </div>
+        </div>
+
+        <div class="honest-notes">
+          <p><strong>How answers work here:</strong> there is no server AI on this page. Suggested answers are assembled in your browser from the profile you pasted — matched to each question by keyword, structured for the mode you picked. They're a strong starting point to read from, not a polished rewrite; the full Copilot inside Muse writes richer answers.</p>
+          <p><strong>Honesty rule:</strong> if no pasted fact matches a question, the answer says so and offers a transferable-skills framing instead of inventing experience. Nothing is recorded or stored, and the page makes no sound.</p>
+          <p><strong>One disclosure:</strong> Web Speech in Chrome sends your audio to Google's speech service for recognition — that's the browser's engine, not this page sending data anywhere.</p>
+          <p><strong>Sherpa disclosure:</strong> with Sherpa selected, recognition runs on this device and audio never leaves it. The engine is the official sherpa-onnx v1.10.46 WebAssembly runtime with the streaming Zipformer English (20M, int8) model, served as separate files with this page and downloaded only when you choose Sherpa (~55 MB in total, then cached by your browser).</p>
+        </div>
+
+        <div class="start-row">
+          <button class="btn btn-lime btn-start" id="startBtn" type="button">Start live interview →</button>
+          <span class="start-hint" id="startHint">Setup folds away and the live screen opens.</span>
+        </div>
+      </section>
+
+      <!-- ================= LIVE ================= -->
+      <section class="live" id="liveView" aria-label="Live interview">
+        <div class="live-head">
+          <div class="live-title" id="liveTitle">Live Interview</div>
+          <span class="status-chip" id="statusChip"><span class="live-dot" style="background:currentColor; box-shadow:none; animation:none;"></span><span id="statusText">Not listening</span></span>
+          <span class="timer" id="timer" aria-label="Session timer">00:00</span>
+          <div class="spacer">
+            <span class="engine-tag" id="engineTag">Engine: Web Speech</span>
+            <button class="btn btn-red" id="endBtn" type="button">End Session</button>
+          </div>
+        </div>
+
+        <div class="live-grid">
+          <div class="panel">
+            <div class="panel-head">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 10v4M8.5 7v10M13 4v16M17.5 8v8M21 11v2" stroke="#c9f24e" stroke-width="2.2" stroke-linecap="round"/></svg>
+              <h2>Live Transcript</h2>
+              <span class="tag" id="transcriptTag">Interviewer &amp; you</span>
+            </div>
+            <div class="current-q" id="currentQ">
+              <div class="cq-label">Question detected</div>
+              <div class="cq-text" id="currentQText"></div>
+            </div>
+            <div class="transcript-log" id="transcriptLog">
+              <div class="t-empty" id="transcriptEmpty">Transcript will appear here as the interviewer speaks. Your own voice is transcribed too — use “Pause while I answer” so it isn't mistaken for a new question.</div>
+            </div>
+            <div class="t-interim" id="interimLine" aria-live="polite"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3Z" fill="#c9f24e"/></svg>
+              <h2>AI Suggested Answer</h2>
+              <span class="tag">Built in this tab from your pasted profile</span>
+            </div>
+            <div class="answer-text" id="answerText"><span class="answer-empty">When a question is detected — or you type one below — a suggested answer appears here in large type, built only from the facts you pasted.</span></div>
+            <div class="chips" id="chips"></div>
+            <div class="answer-controls">
+              <button class="btn btn-ghost" id="copyBtn" type="button">Copy</button>
+              <button class="btn btn-ghost" id="regenBtn" type="button">Regenerate</button>
+              <button class="btn btn-ghost" id="shorterBtn" type="button">Shorter</button>
+              <button class="btn btn-ghost" id="detailBtn" type="button">More detail</button>
+              <button class="btn btn-ghost" id="simplerBtn" type="button">Simpler</button>
+              <span class="fontsize-ctl">
+                <button type="button" id="fontDown" aria-label="Smaller answer text">A−</button>
+                <button type="button" id="fontUp" aria-label="Larger answer text">A+</button>
+              </span>
+            </div>
+            <div class="live-msg" id="liveMsg" role="alert"></div>
+          </div>
+        </div>
+
+        <div class="manual-bar">
+          <label for="manualInput">Type a question manually — always works, no mic needed</label>
+          <input type="text" id="manualInput" placeholder="e.g. Tell me about a time you dealt with a difficult stakeholder" autocomplete="off" />
+          <button class="btn btn-lime" id="manualBtn" type="button">Get answer</button>
+        </div>
+
+        <div class="history-panel">
+          <div class="history-head">
+            <h2>Questions this session</h2>
+            <span class="spacer"></span>
+            <div class="history-nav">
+              <button type="button" id="prevQ" disabled>← Previous</button>
+              <button type="button" id="nextQ" disabled>Next →</button>
+            </div>
+          </div>
+          <ul class="history-list" id="historyList"></ul>
+          <div class="history-empty" id="historyEmpty">No questions yet. History lives only in this tab and clears on reload.</div>
+        </div>
+
+        <div class="bottom-bar">
+          <button class="mic-btn" id="micBtn" type="button" aria-label="Start or stop listening">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+          <div class="mic-state">
+            <span class="ms-top" id="micStateTop">Listening off</span>
+            <span class="ms-sub" id="micStateSub">Tap the mic to start</span>
+          </div>
+          <div class="bar-sep"></div>
+          <button class="toggle-btn" id="micToggle" type="button" aria-pressed="true"><span class="dot"></span>Microphone: On</button>
+          <div class="bb-right">
+            <button class="toggle-btn pause-btn" id="pauseBtn" type="button" aria-pressed="false"><span class="dot"></span>Pause while I answer</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+    (function(){
+      "use strict";
+      var $ = function(id){ return document.getElementById(id); };
+
+      /* ---------------- state (tab memory only) ---------------- */
+      var S = {
+        company:"", role:"", jd:"",
+        facts:[],                 // parsed profile lines
+        mode:"standard",
+        engine:"webspeech",
+        listening:false,          // recognition should be running
+        micOn:true,
+        paused:false,             // pause-while-I-answer
+        history:[],               // {q, answer, chips, time}
+        cur:-1,                   // current history index
+        curFacts:[],              // facts matched to current question
+        curClass:"general",
+        variant:0,                // regenerate rotation
+        level:1,                  // 0 shorter, 1 normal, 2 detailed
+        simple:false,
+        timerSec:0, timerId:null,
+        testMode:false,
+        sherpaState:"idle",       // idle | loading | ready | failed
+        sherpaError:""
+      };
+      window.__sherpaState = {state:"idle", error:""};
+
+      /* ---------------- diagnostics (split, re-checkable) ---------------- */
+      function wasmOK(){
+        try{
+          if(typeof WebAssembly !== "object" || !WebAssembly) return false;
+          var bytes = new Uint8Array([0,97,115,109,1,0,0,0]);
+          return WebAssembly.validate(bytes);
+        }catch(e){ return false; }
+      }
+      function micApiOK(){
+        return !!(navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === "function");
+      }
+      function secureOK(){ return !!window.isSecureContext; }
+
+      /* A mic request can be denied for two very different reasons, and the
+         fix for each is different:
+         (a) the user/site setting genuinely Blocks the mic — the browser has
+             a recorded "denied" permission state, and the padlock steps fix it;
+         (b) the view hosting this page never delegates microphone access to
+             it (a frame without mic permission in its policy) — the browser
+             rejects the request BEFORE it can prompt, so the permission state
+             is still "prompt" (never asked) and no setting of the user's can
+             change it. These helpers tell the two apart. */
+      function isFramed(){
+        try{ return window.self !== window.top; }catch(e){ return true; }
+      }
+      function frameAllowsMic(){
+        try{
+          var pp = document.permissionsPolicy || document.featurePolicy;
+          if(pp && typeof pp.allowsFeature === "function") return pp.allowsFeature("microphone");
+        }catch(e){}
+        return null; // browser doesn't say — unknown, not a pass or a fail
+      }
+      function micPermissionState(){
+        if(!(navigator.permissions && typeof navigator.permissions.query === "function"))
+          return Promise.resolve(null);
+        return navigator.permissions.query({name:"microphone"})
+          .then(function(st){ return st.state; })
+          .catch(function(){ return null; });
+      }
+      /* Resolves to the honest message for a denied mic request: names the
+         host/frame block when that's the cause, and only sends the user to
+         the padlock steps when the browser really has this site Blocked. */
+      function micBlockedMessage(engineLabel){
+        return micPermissionState().then(function(state){
+          var allows = frameAllowsMic();
+          if(allows === false || (state === "prompt" && isFramed())){
+            return "The microphone was blocked before your browser could even ask you — you didn't deny it, and no prompt ever appeared. This page is open inside a frame or app view that isn't passing microphone access through to it, so it's blocked on the hosting side: Chrome/Edge site settings and system mic settings can't change that. To listen, open this page's own link directly as a tab in Chrome or Edge (not inside another app's viewer); if it still blocks there, the host serving the page is the cause. Manual entry below always works.";
+          }
+          if(state === "denied"){
+            return "Microphone permission is set to Block for this site in your browser. Click the padlock / tune icon beside the address bar → Site settings → Microphone → Allow, then reload and test again. Also check your system mic privacy settings for Chrome/Edge." + (engineLabel ? " Note: " + engineLabel + " needs the same Allow — it can't bypass a mic Block." : "");
+          }
+          return "Microphone permission was denied. Click the padlock / tune icon beside the address bar → Site settings → Microphone → Allow, then reload and test again. Also check your system mic privacy settings for Chrome/Edge.";
+        });
+      }
+
+      function runDiagnostics(){
+        var w = wasmOK(), m = micApiOK(), s = secureOK();
+        setDiag("Wasm", w, w ? "Available" : "Not available");
+        setDiag("Mic", m, m ? "Exposed" : "Not exposed in this view");
+        setDiag("Https", s, s ? "Yes" : "No");
+        setDiag("Perm", false, "Checking…");
+        // Permission state is async — fill its row in when it resolves.
+        micPermissionState().then(function(state){
+          if(state === "granted") setDiag("Perm", true, "Granted");
+          else if(state === "prompt") setDiag("Perm", true, "Will ask when you test");
+          else if(state === "denied") setDiag("Perm", false, "Blocked for this site");
+          else setDiag("Perm", false, "Can't check in this browser");
+          // A recorded site Block is worth surfacing here too — but never
+          // override the more specific frame/API messages below.
+          if(state === "denied" && frameAllowsMic() !== false){
+            var dm = $("diagMsg");
+            if(!dm.textContent){
+              dm.textContent = "Your browser has microphone set to Block for this site. Padlock / tune icon beside the address bar → Site settings → Microphone → Allow, then reload. Both engines need that same Allow.";
+              dm.className = "diag-msg show";
+            }
+          }
+        });
+        var msg = $("diagMsg");
+        if(frameAllowsMic() === false){
+          msg.textContent = "This view is blocking the microphone at the frame level: the app or page hosting this view hasn't delegated microphone access to it, so the browser denies the mic before it can ever ask you. That is a hosting-side block — no Chrome/Edge or system setting of yours can lift it. Open this page's own link directly as a tab in Chrome or Edge instead of inside another app's viewer; manual entry always works either way.";
+          msg.className = "diag-msg show";
+        } else if(!m){
+          msg.textContent = "Live listening can't run in this view: the microphone API isn't exposed here — this usually means the page is open inside another app. Open this page's own link directly in Chrome or Edge (its own tab) and the mic will be available.";
+          msg.className = "diag-msg show";
+        } else if(!s){
+          msg.textContent = "This page isn't on a secure (HTTPS) connection, so the browser will block the microphone. Open it over HTTPS in Chrome or Edge.";
+          msg.className = "diag-msg show";
+        } else if(!w){
+          msg.textContent = "WebAssembly isn't available in this browser. Web Speech may still work in Chrome/Edge, but local engines can't. Try a current Chrome or Edge.";
+          msg.className = "diag-msg show";
+        } else {
+          msg.textContent = "";
+          msg.className = "diag-msg";
+        }
+        return {wasm:w, mic:m, secure:s};
+      }
+      function setDiag(k, ok, val){
+        $("diag"+k+"Dot").className = "diag-dot " + (ok ? "ok" : "bad");
+        $("diag"+k+"Val").textContent = val;
+      }
+      $("recheckBtn").addEventListener("click", runDiagnostics);
+
+      /* ---------------- setup: profile parsing ---------------- */
+      function parseProfile(){
+        var raw = $("profileInput").value || "";
+        var lines = raw.split(/\n+/).map(function(l){
+          return l.replace(/^\s*[•\-\*\d\.\)]+\s*/, "").trim();
+        }).filter(function(l){ return l.length >= 12; });
+        // also split long single-block paste on sentence boundaries if it came as one paragraph
+        if(lines.length <= 1 && raw.trim().length > 200){
+          lines = raw.replace(/^\s*[•\-\*]+\s*/gm, "").split(/(?<=[.!])\s+(?=[A-Z0-9])/)
+            .map(function(l){ return l.trim(); }).filter(function(l){ return l.length >= 25; });
+        }
+        S.facts = lines;
+        var st = $("factStatus");
+        if(lines.length){
+          st.textContent = "Profile loaded: " + lines.length + " fact" + (lines.length===1?"":"s") + " ready to draw answers from.";
+          st.className = "fact-status";
+        } else {
+          st.textContent = "No usable fact lines found — paste one fact per line, then tap “Use this profile” again.";
+          st.className = "fact-status warn";
+        }
+        return lines.length;
+      }
+      $("useProfileBtn").addEventListener("click", parseProfile);
+
+      /* ---------------- setup: labels, mode, engine ---------------- */
+      function refreshLabels(){
+        S.company = $("companyInput").value.trim();
+        S.role = $("roleInput").value.trim();
+        var lbl = (S.company || S.role) ? ((S.role ? S.role : "") + (S.company && S.role ? " · " : "") + (S.company ? S.company : "")) : "";
+        $("sessionLabel").textContent = lbl;
+        $("liveTitle").innerHTML = "Live Interview" + (lbl ? ' <span class="role">— ' + escapeHtml(lbl) + "</span>" : "");
+      }
+      $("companyInput").addEventListener("input", refreshLabels);
+      $("roleInput").addEventListener("input", refreshLabels);
+
+      $("modeSeg").addEventListener("click", function(e){
+        var b = e.target.closest("button[data-mode]");
+        if(!b) return;
+        S.mode = b.getAttribute("data-mode");
+        var btns = $("modeSeg").querySelectorAll("button");
+        for(var i=0;i<btns.length;i++) btns[i].classList.toggle("sel", btns[i]===b);
+        if(S.cur >= 0) renderAnswer();
+      });
+
+      var engineRadios = document.querySelectorAll('input[name="engine"]');
+      engineRadios.forEach(function(r){
+        r.addEventListener("change", function(){
+          if(r.checked && !r.disabled){
+            if(S.listening || S.testMode || recWanted || shActive){ stopRecognition(); S.testMode = false; $("micTestBtn").textContent = "Test microphone"; }
+            S.engine = r.value;
+            $("engineWebspeechOpt").classList.toggle("sel", r.value==="webspeech");
+            $("engineSherpaOpt").classList.toggle("sel", r.value==="sherpa");
+            $("engineManualOpt").classList.toggle("sel", r.value==="manual");
+            $("engineTag").textContent = "Engine: " + (r.value==="webspeech" ? "Web Speech" : (r.value==="sherpa" ? "Sherpa (local)" : "Manual entry"));
+            if(r.value === "sherpa"){
+              setSherpaUI();
+              if(S.sherpaState === "idle" || S.sherpaState === "failed") loadSherpaRuntime().catch(function(){ setSherpaUI(); });
+            }
+            updateListeningUI();
+          }
+        });
+      });
+      $("sherpaLoadBtn").addEventListener("click", function(){
+        runDiagnostics();
+        if(!wasmOK()){
+          S.sherpaState = "failed";
+          S.sherpaError = "Sherpa needs WebAssembly, which isn't available in this browser/view. Try Chrome or Edge on desktop — Web Speech and manual entry still work.";
+          setSherpaUI();
+          return;
+        }
+        loadSherpaRuntime().then(function(){ setSherpaUI(); }).catch(function(){ setSherpaUI(); });
+      });
+
+      function escapeHtml(s){
+        return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+      }
+
+      /* ---------------- speech recognition ---------------- */
+      var SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+      var rec = null, recWanted = false, recTarget = "live"; // "live" | "test"
+      var recentFinals = []; // {text, t}
+
+      function srSupported(){ return !!SR; }
+
+      function makeRecognition(){
+        var r = new SR();
+        r.continuous = true;
+        r.interimResults = true;
+        r.lang = "en-US";
+        r.onresult = onResult;
+        r.onerror = onError;
+        r.onend = function(){
+          if(recWanted){
+            // Chrome ends sessions periodically — restart quietly
+            try{ r.start(); }catch(e){ setTimeout(function(){ if(recWanted){ try{ r.start(); }catch(e2){} } }, 350); }
+          } else {
+            updateListeningUI();
+          }
+        };
+        return r;
+      }
+      function startRecognition(target){
+        runDiagnostics();
+        if(S.engine === "sherpa"){ return startSherpa(target); }
+        if(!srSupported()){
+          showLiveError("This browser has no Web Speech recognition. Chrome or Edge on desktop works best — or use manual question entry below, which always works.");
+          return false;
+        }
+        if(!micApiOK()){
+          var m = "The microphone API isn't exposed in this view, so listening can't start here. Open this page's own link directly in Chrome or Edge, then try again — or use manual question entry below.";
+          if(target === "test"){ setTestStatus(m, true); } else { showLiveError(m); }
+          return false;
+        }
+        recTarget = target;
+        if(!rec) rec = makeRecognition();
+        recWanted = true;
+        try{ rec.start(); }catch(e){ /* already running */ }
+        S.listening = (target === "live");
+        updateListeningUI();
+        return true;
+      }
+      function stopRecognition(){
+        recWanted = false;
+        S.listening = false;
+        if(rec){ try{ rec.stop(); }catch(e){} }
+        stopSherpa();
+        $("interimLine").textContent = "";
+        updateListeningUI();
+      }
+
+      /* ---------------- Sherpa-ONNX local backup engine ----------------
+         Official sherpa-onnx v1.10.46 WebAssembly streaming runtime +
+         streaming Zipformer English model (sherpa-onnx-streaming-zipformer-en-20M-2023-02-17, int8),
+         packaged in the runtime's .data file (~44 MB) under the generic names
+         the recognizer config expects (encoder.onnx / decoder.onnx / joiner.onnx / tokens.txt).
+         The files ship as separate assets with this page (assets/sherpa/) and are
+         fetched ONLY when Sherpa is selected or its download is clicked — never
+         on page load — and are cached by the browser after the first load.
+         Direct public hosting was tried first: the HuggingFace space file URL
+         for this runtime returns 401, its hf.space host 404s, and the GitHub
+         v1.10.46 release ships only ~174 MB tar.bz2 archives, which a browser
+         cannot load as a runtime — so the verified official package is hosted
+         same-origin here and loaded at runtime. Audio is captured with
+         getUserMedia, resampled to 16 kHz mono, and fed to the streaming
+         recognizer; nothing leaves the device and no audio is recorded. */
+      var SHERPA_BASE = "assets/sherpa/";
+      var SHERPA_PART_COUNT = 6; // model .data package split into ~7 MB parts (some static hosts refuse one 44 MB file); reassembled in-memory below, byte-identical (MD5 verified against the original package)
+      var SHERPA_TOTAL_BYTES = 43649301 + 11482230; // .data package + .wasm, for progress
+      var SHERPA_FILES = {
+        glue: SHERPA_BASE + "sherpa-onnx-asr.js",
+        main: SHERPA_BASE + "sherpa-onnx-wasm-main-asr.js",
+        wasm: SHERPA_BASE + "sherpa-onnx-wasm-main-asr.wasm",
+        data: SHERPA_BASE + "sherpa-model.part{0.." + (SHERPA_PART_COUNT - 1) + "}.bin"
+      };
+      var SHERPA_EXPECTED = { wasm: 11482230, dataTotal: 43649301, partSizes: [7274884, 7274884, 7274884, 7274884, 7274884, 7274881] };
+      var sherpaWasmBuf = null, sherpaDataBuf = null, sherpaProgressMax = 0;
+      var sherpaPromise = null, sherpaLoadCount = 0, sherpaStage = "", sherpaErrLog = [];
+      var shMedia = null, shCtx = null, shSource = null, shProcessor = null;
+      var shStream = null, shRecognizer = null, shActive = false, shTarget = "live", shSession = 0;
+
+      function setSherpaUI(){
+        var box = $("sherpaProgress"), fill = $("sherpaBarFill"), st = $("sherpaStatus"), btn = $("sherpaLoadBtn");
+        if(!box) return;
+        window.__sherpaState = {state:S.sherpaState, error:S.sherpaError || "", stage:sherpaStage || ""};
+        if(S.sherpaState === "loading"){
+          box.classList.add("show"); st.className = "sherpa-status";
+          st.textContent = "Loading Sherpa — " + (sherpaStage || "starting") + "… (~55 MB total, first time only; then your browser caches it)";
+          btn.disabled = true; btn.textContent = "Downloading…";
+        } else if(S.sherpaState === "ready"){
+          box.classList.add("show"); fill.style.width = "100%"; st.className = "sherpa-status";
+          st.textContent = "Sherpa model ready — recognition runs on this device.";
+          btn.disabled = true; btn.textContent = "Sherpa model ready ✓";
+        } else if(S.sherpaState === "failed"){
+          box.classList.add("show"); st.className = "sherpa-status err"; st.textContent = S.sherpaError;
+          btn.disabled = false; btn.textContent = "Retry Sherpa download";
+        } else {
+          box.classList.remove("show"); btn.disabled = false; btn.textContent = "Download Sherpa (~55 MB)";
+        }
+      }
+      function sherpaProgress(f){
+        sherpaProgressMax = Math.max(sherpaProgressMax, Math.max(0, Math.min(1, f)));
+        $("sherpaProgress").classList.add("show");
+        $("sherpaBarFill").style.width = Math.round(sherpaProgressMax * 100) + "%";
+      }
+      function sherpaSetStage(stage){
+        sherpaStage = stage;
+        if(S.sherpaState === "loading") setSherpaUI();
+      }
+      /* Every fetched file is checked against the official package's exact byte
+         size, so a wrong/truncated file served by the host fails fast, naming
+         the file — instead of stalling the runtime start further down. */
+      async function fetchSherpaBinaries(){
+        var loaded = 0;
+        async function fetchBuf(url, expected){
+          var r = await fetch(url);
+          if(!r.ok) throw new Error("fetch failed HTTP " + r.status + " for " + url);
+          var b = await r.arrayBuffer();
+          if(expected != null && b.byteLength !== expected)
+            throw new Error("wrong file served for " + url + ": got " + b.byteLength + " bytes, expected " + expected + " — it doesn't match the official package, so loading stopped here instead of stalling");
+          loaded += b.byteLength;
+          sherpaProgress(Math.min(0.97, loaded / SHERPA_TOTAL_BYTES));
+          return b;
+        }
+        sherpaWasmBuf = await fetchBuf(SHERPA_FILES.wasm, SHERPA_EXPECTED.wasm);
+        var merged = new Uint8Array(SHERPA_EXPECTED.dataTotal);
+        var off = 0;
+        for(var i=0;i<SHERPA_PART_COUNT;i++){
+          var part = await fetchBuf(SHERPA_BASE + "sherpa-model.part" + i + ".bin", SHERPA_EXPECTED.partSizes[i]);
+          merged.set(new Uint8Array(part), off);
+          off += part.byteLength;
+        }
+        if(off !== SHERPA_EXPECTED.dataTotal)
+          throw new Error("model data reassembled to " + off + " bytes, expected " + SHERPA_EXPECTED.dataTotal);
+        sherpaDataBuf = merged.buffer;
+      }
+      function loadScriptOnce(src, timeoutMs){
+        return new Promise(function(resolve, reject){
+          if(document.querySelector('script[data-sherpa-src="' + src + '"]')){ resolve(); return; }
+          var el = document.createElement("script");
+          var to = setTimeout(function(){ reject(new Error("script load timed out after " + Math.round((timeoutMs || 30000) / 1000) + "s: " + src)); }, timeoutMs || 30000);
+          el.src = src; el.async = true; el.setAttribute("data-sherpa-src", src);
+          el.onload = function(){ clearTimeout(to); resolve(); };
+          el.onerror = function(){ clearTimeout(to); el.remove(); reject(new Error("script load failed: " + src)); };
+          document.head.appendChild(el);
+        });
+      }
+      /* A retry genuinely starts over: the injected runtime scripts are removed
+         so they re-execute, the old Emscripten Module object is dropped, and the
+         cached binaries + progress are cleared. Previously the old script tags
+         were left in place, loadScriptOnce() resolved instantly without
+         re-running anything, and Retry was guaranteed to time out again. */
+      function resetSherpaForRetry(){
+        var olds = document.querySelectorAll('script[data-sherpa-src]');
+        for(var i=0;i<olds.length;i++) olds[i].remove();
+        try{ delete window.Module; }catch(e){ window.Module = undefined; }
+        sherpaWasmBuf = null; sherpaDataBuf = null;
+        sherpaProgressMax = 0; sherpaErrLog = [];
+        window.__sherpaRecognizerCreated = false;
+        sherpaProgress(0);
+      }
+      /* Starts the Emscripten runtime with the already-fetched, size-validated
+         bytes handed over directly (Module.wasmBinary + getPreloadedPackage),
+         so the runtime never re-downloads the .wasm/.data through blob URLs —
+         the path that could stall silently. Module.onAbort and page errors
+         during this stage reject immediately with the real error instead of
+         being swallowed until a blanket timeout. */
+      function startSherpaModule(){
+        return new Promise(function(resolve, reject){
+          var settled = false, timer = null;
+          function done(fn, val){
+            if(settled) return; settled = true;
+            if(timer) clearTimeout(timer);
+            window.removeEventListener("error", onWinErr, true);
+            fn(val);
+          }
+          function onWinErr(ev){
+            var f = ev && ev.filename ? String(ev.filename) : "";
+            var m = ev && ev.message ? String(ev.message) : "";
+            if(f.indexOf("sherpa") !== -1 || /wasm|WebAssembly/i.test(m)){
+              done(reject, new Error("page error while the runtime started: " + (m || "unknown script error")));
+            }
+          }
+          window.addEventListener("error", onWinErr, true);
+          var mod = {
+            wasmBinary: sherpaWasmBuf,
+            getPreloadedPackage: function(name, size){
+              if(sherpaDataBuf && sherpaDataBuf.byteLength === size) return sherpaDataBuf;
+              return null;
+            },
+            locateFile: function(path){
+              if(path.slice(-5) === ".wasm") return SHERPA_FILES.wasm;
+              if(path.slice(-5) === ".data") return SHERPA_BASE + path; // fallback only; the data is normally preloaded above — never hand back the .wasm for a .data request
+              return path;
+            },
+            onAbort: function(what){
+              done(reject, new Error("the WebAssembly runtime aborted" + (what ? ": " + String(what).slice(0, 300) : "")));
+            },
+            printErr: function(){
+              var line = Array.prototype.slice.call(arguments).join(" ");
+              if(line){ sherpaErrLog.push(line.slice(0, 300)); if(sherpaErrLog.length > 12) sherpaErrLog.shift(); }
+            },
+            setStatus: function(text){
+              var m = /Downloading data\.\.\. \((\d+)\/(\d+)\)/.exec(text || "");
+              if(m){ var total = Number(m[2]); if(total > 0) sherpaProgress(Number(m[1]) / total); }
+            },
+            onRuntimeInitialized: null
+          };
+          mod.onRuntimeInitialized = function(){ done(resolve, mod); };
+          window.Module = mod;
+          timer = setTimeout(function(){
+            done(reject, new Error("the runtime did not become ready within 90 seconds — compiling the WebAssembly or unpacking the model stalled"));
+          }, 90000);
+          loadScriptOnce(SHERPA_FILES.main, 30000).catch(function(e){ done(reject, e); });
+        });
+      }
+      function loadSherpaRuntime(){
+        if(sherpaPromise) return sherpaPromise;
+        if(sherpaLoadCount > 0) resetSherpaForRetry();
+        sherpaLoadCount++;
+        S.sherpaState = "loading"; S.sherpaError = ""; setSherpaUI(); sherpaProgress(0);
+        function stageErr(stage, e){
+          var reason = e && e.message ? e.message : String(e || "unknown error");
+          var err = new Error("stage \u201C" + stage + "\u201D \u2014 " + reason);
+          err.sherpaStage = stage;
+          return err;
+        }
+        var p = (async function(){
+          if(!wasmOK()) throw stageErr("checking WebAssembly support", new Error("WebAssembly not available in this browser"));
+          sherpaSetStage("1 of 4 · loading the recognizer script");
+          try{ await loadScriptOnce(SHERPA_FILES.glue, 30000); }
+          catch(e){ throw stageErr("loading the recognizer script (" + SHERPA_FILES.glue + ")", e); }
+          if(typeof window.createOnlineRecognizer !== "function")
+            throw stageErr("loading the recognizer script", new Error(SHERPA_FILES.glue + " loaded but did not define createOnlineRecognizer — the file served doesn't match the official sherpa-onnx v1.10.46 package"));
+          sherpaSetStage("2 of 4 · downloading the runtime + model files");
+          try{ if(!sherpaDataBuf || !sherpaWasmBuf) await fetchSherpaBinaries(); }
+          catch(e){ throw stageErr("downloading the runtime + model files", e); }
+          sherpaSetStage("3 of 4 · starting the WebAssembly runtime (compiling + unpacking the model)");
+          var runtime;
+          try{ runtime = await startSherpaModule(); }
+          catch(e){ throw stageErr("starting the WebAssembly runtime", e); }
+          sherpaSetStage("4 of 4 · creating the recognizer");
+          await new Promise(function(r){ setTimeout(r, 30); });
+          var recognizer;
+          try{ recognizer = window.createOnlineRecognizer(runtime); }
+          catch(e){ throw stageErr("creating the recognizer", e); }
+          if(!recognizer) throw stageErr("creating the recognizer", new Error("recognizer creation returned nothing"));
+          window.__sherpaRecognizerCreated = true;
+          sherpaProgress(1);
+          sherpaStage = "";
+          S.sherpaState = "ready"; setSherpaUI();
+          return {module: runtime, recognizer: recognizer};
+        })();
+        p.catch(function(e){
+          if(sherpaPromise === p) sherpaPromise = null;
+          S.sherpaState = "failed";
+          var reason = e && e.message ? e.message : "unknown error";
+          var logTail = sherpaErrLog.length ? " Runtime messages: " + sherpaErrLog.slice(-3).join(" | ") : "";
+          S.sherpaError = "Sherpa failed to load during " + reason + "." + logTail + " Sources tried: " + SHERPA_FILES.glue + ", " + SHERPA_FILES.main + ", " + SHERPA_FILES.wasm + ", " + SHERPA_FILES.data + " — the official sherpa-onnx v1.10.46 runtime + streaming Zipformer en-20M int8 model served with this page. Tap Retry to reload everything from scratch — Web Speech and manual entry still work.";
+          sherpaProgressMax = 0;
+          sherpaStage = "";
+          setSherpaUI();
+        });
+        sherpaPromise = p;
+        return p;
+      }
+      function resample16k(input, rate){
+        if(rate === 16000) return input;
+        var ratio = rate / 16000;
+        var outLen = Math.max(1, Math.floor(input.length / ratio));
+        var out = new Float32Array(outLen);
+        for(var i=0;i<outLen;i++){
+          var pos = i * ratio, idx = Math.floor(pos), frac = pos - idx;
+          var a = input[idx] || 0, b = (idx + 1 < input.length) ? input[idx+1] : a;
+          out[i] = a + (b - a) * frac;
+        }
+        return out;
+      }
+      function sherpaFail(msg, target){
+        if(target === "test") setTestStatus(msg, true); else showLiveError(msg);
+      }
+      function handleInterimTranscript(text, target){
+        if(target === "test"){
+          var box = $("testTranscript");
+          box.classList.add("show");
+          box.textContent = text;
+        } else {
+          $("interimLine").textContent = text;
+        }
+      }
+      function handleFinalTranscript(text, target){
+        text = (text || "").trim();
+        if(!text) return;
+        if(target === "test"){
+          var box = $("testTranscript");
+          box.classList.add("show");
+          box.textContent = (box.textContent && box.textContent !== text) ? box.textContent + " " + text : text;
+          if(isQuestion(text) || /falling behind/i.test(text)) setTestStatus("Heard you — Sherpa transcription is working, on this device. You're ready to start.", false);
+          else setTestStatus("Hearing you (Sherpa, on-device). Try the sample question above so it can check question detection too.", false);
+          return;
+        }
+        addTranscript(text);
+        recentFinals.push({text:text, t:Date.now()});
+        recentFinals = recentFinals.filter(function(x){ return Date.now() - x.t < 12000; });
+        var candidate = recentFinals.map(function(x){ return x.text; }).join(" ");
+        if(!S.paused && isQuestion(candidate)){
+          recentFinals = [];
+          askQuestion(cleanQuestion(candidate));
+        } else if(!S.paused && isQuestion(text)){
+          askQuestion(cleanQuestion(text));
+        }
+      }
+      async function startSherpa(target){
+        shTarget = target;
+        var mySession = ++shSession;
+        if(!wasmOK()){
+          sherpaFail("Sherpa needs WebAssembly, which this browser/view doesn't provide. Chrome or Edge on desktop works best — manual entry below always works.", target);
+          return false;
+        }
+        if(!micApiOK()){
+          sherpaFail("The microphone API isn't exposed in this view, so Sherpa can't listen here either — it bypasses the speech service, not the mic permission. Open this page's own link directly in Chrome or Edge, or use manual entry below.", target);
+          return false;
+        }
+        var media;
+        try{
+          media = await navigator.mediaDevices.getUserMedia({audio:true});
+        }catch(err){
+          var name = err && err.name ? err.name : "";
+          if(name === "NotFoundError" || name === "DevicesNotFoundError" || name === "OverconstrainedError"){
+            sherpaFail("No microphone was found for Sherpa. Connect a mic and try again — manual entry below always works.", target);
+          } else {
+            micBlockedMessage().then(function(m){
+              sherpaFail("Sherpa couldn't get the microphone. " + m, target);
+            });
+          }
+          return false;
+        }
+        var rt;
+        try{
+          rt = await loadSherpaRuntime();
+        }catch(e){
+          media.getTracks().forEach(function(t){ t.stop(); });
+          sherpaFail(S.sherpaError || "The Sherpa model couldn't be loaded. Web Speech and manual entry still work.", target);
+          S.listening = false; updateListeningUI();
+          return false;
+        }
+        if(mySession !== shSession || S.engine !== "sherpa"){
+          media.getTracks().forEach(function(t){ t.stop(); });
+          return false;
+        }
+        shMedia = media; shRecognizer = rt.recognizer;
+        shStream = shRecognizer.createStream();
+        var AC = window.AudioContext || window.webkitAudioContext;
+        shCtx = new AC();
+        if(shCtx.state === "suspended"){ try{ await shCtx.resume(); }catch(e){} }
+        shSource = shCtx.createMediaStreamSource(media);
+        shProcessor = shCtx.createScriptProcessor(4096, 1, 1);
+        shActive = true;
+        shProcessor.onaudioprocess = function(ev){
+          if(!shActive || !shStream || !shRecognizer) return;
+          var input = ev.inputBuffer.getChannelData(0);
+          var samples = resample16k(new Float32Array(input), shCtx.sampleRate);
+          shStream.acceptWaveform(16000, samples);
+          while(shRecognizer.isReady(shStream)) shRecognizer.decode(shStream);
+          var text = "";
+          try{ text = (shRecognizer.getResult(shStream).text || "").trim(); }catch(e){}
+          if(shRecognizer.isEndpoint(shStream)){
+            if(text) handleFinalTranscript(text, shTarget);
+            shRecognizer.reset(shStream);
+            if(shTarget === "live") $("interimLine").textContent = "";
+          } else if(text){
+            handleInterimTranscript(text, shTarget);
+          }
+        };
+        shSource.connect(shProcessor);
+        shProcessor.connect(shCtx.destination);
+        S.listening = (target === "live");
+        updateListeningUI();
+        return true;
+      }
+      function stopSherpa(){
+        shSession++;
+        if(!shActive && !shStream && !shMedia) return;
+        shActive = false;
+        try{ if(shProcessor) shProcessor.disconnect(); }catch(e){}
+        try{ if(shSource) shSource.disconnect(); }catch(e){}
+        if(shMedia){ shMedia.getTracks().forEach(function(t){ t.stop(); }); shMedia = null; }
+        if(shCtx){ try{ shCtx.close(); }catch(e){} shCtx = null; }
+        if(shStream){
+          try{
+            shStream.inputFinished();
+            while(shRecognizer && shRecognizer.isReady(shStream)) shRecognizer.decode(shStream);
+            var tail = "";
+            try{ tail = (shRecognizer.getResult(shStream).text || "").trim(); }catch(e){}
+            if(tail && shTarget === "live") handleFinalTranscript(tail, "live");
+            shStream.free();
+          }catch(e){}
+          shStream = null;
+        }
+        shProcessor = null; shSource = null;
+      }
+
+      function onResult(ev){
+        var interim = "", finals = [];
+        for(var i = ev.resultIndex; i < ev.results.length; i++){
+          var res = ev.results[i];
+          var txt = res[0].transcript.trim();
+          if(res.isFinal){ if(txt) finals.push(txt); }
+          else { interim += (interim ? " " : "") + txt; }
+        }
+        if(recTarget === "test"){
+          var box = $("testTranscript");
+          box.classList.add("show");
+          if(finals.length){
+            box.textContent = (box.textContent ? box.textContent + " " : "") + finals.join(" ");
+            var joined = finals.join(" ");
+            if(isQuestion(joined) || /falling behind/i.test(joined)){
+              setTestStatus("Heard you — transcription is working. You're ready to start.", false);
+            } else {
+              setTestStatus("Hearing you. Try the sample question above so it can check question detection too.", false);
+            }
+          } else if(interim){
+            box.textContent = interim;
+          }
+          return;
+        }
+        // live
+        if(interim) $("interimLine").textContent = interim;
+        finals.forEach(function(f){
+          addTranscript(f);
+          recentFinals.push({text:f, t:Date.now()});
+          recentFinals = recentFinals.filter(function(x){ return Date.now() - x.t < 12000; });
+          var candidate = recentFinals.map(function(x){ return x.text; }).join(" ");
+          if(!S.paused && isQuestion(candidate)){
+            recentFinals = [];
+            askQuestion(cleanQuestion(candidate));
+          } else if(!S.paused && isQuestion(f)){
+            askQuestion(cleanQuestion(f));
+          }
+        });
+      }
+
+      function onError(ev){
+        var err = ev.error || "";
+        if(recTarget === "test"){ S.testMode = false; $("micTestBtn").textContent = "Test microphone"; }
+        if(err === "service-not-allowed"){
+          recWanted = false; S.listening = false; updateListeningUI();
+          var smsg = "The browser's speech service refused (service-not-allowed) — that's Web Speech's cloud service, not your microphone. Backup: switch the transcription engine to Sherpa-ONNX (local) in Setup and download the model once — it runs on this device and never uses that service. Manual entry below always works.";
+          if(recTarget === "test") setTestStatus(smsg, true); else showLiveError(smsg);
+        } else if(err === "not-allowed"){
+          recWanted = false; S.listening = false; updateListeningUI();
+          var tgt = recTarget;
+          micBlockedMessage("Sherpa").then(function(m){
+            m += " Manual entry below always works.";
+            if(tgt === "test") setTestStatus(m, true); else showLiveError(m);
+          });
+        } else if(err === "audio-capture"){
+          recWanted = false; S.listening = false; updateListeningUI();
+          var m2 = "No microphone was found. Check a mic is connected and not held by another app (Teams/Zoom), then try again — or use manual entry.";
+          if(recTarget === "test") setTestStatus(m2, true); else showLiveError(m2);
+        } else if(err === "no-speech"){
+          // keep listening; Chrome will fire onend and we restart
+          if(recTarget === "live") setStatus("Listening — no speech heard yet", "listening");
+        } else if(err === "network"){
+          if(recTarget === "live") showLiveError("The browser's speech service hit a network problem. Check your connection, or switch to manual entry below.");
+        }
+        // "aborted" is our own stop — ignore
+      }
+
+      /* ---------------- question detection ---------------- */
+      var QPATTERNS = [
+        /tell me about/i, /walk me through/i, /talk me through/i,
+        /how would you/i, /how do you/i, /how did you/i, /how have you/i,
+        /what experience/i, /describe (a|an|the|your)/i, /give (me )?(an|a) example/i,
+        /can you (tell|describe|explain|walk|share|talk)/i, /could you (tell|describe|explain|walk|share)/,
+        /why (do|did|should|are|would) you/i, /what (is|are|was|were) your/i,
+        /have you (ever|worked|used|managed|led|handled)/i, /what would you do/i,
+        /tell me about yourself/i, /where do you see yourself/i,
+        /a time when/i, /an example of/i, /\?\s*$/
+      ];
+      function isQuestion(text){
+        if(!text || text.trim().length < 12) return false;
+        for(var i=0;i<QPATTERNS.length;i++){ if(QPATTERNS[i].test(text)) return true; }
+        return false;
+      }
+      function cleanQuestion(text){
+        var t = text.trim();
+        // keep only from the question-starter onward if earlier chatter is attached
+        var m = t.match(/(tell me about|walk me through|talk me through|how would you|how do you|how did you|describe |give me|can you|could you|why do you|what experience|what is your|what are your|have you|tell me about yourself)[\s\S]*$/i);
+        if(m) t = m[0].trim();
+        if(t.length > 220) t = t.slice(t.length - 220);
+        return t.charAt(0).toUpperCase() + t.slice(1);
+      }
+
+      /* ---------------- transcript UI ---------------- */
+      function addTranscript(text){
+        var empty = $("transcriptEmpty");
+        if(empty) empty.remove();
+        var log = $("transcriptLog");
+        var div = document.createElement("div");
+        div.className = "t-entry" + (isQuestion(text) ? " q" : "");
+        div.innerHTML = '<div class="t-who">' + (isQuestion(text) ? "Interviewer" : "Heard") + '</div><div class="t-text">' + escapeHtml(text) + "</div>";
+        log.appendChild(div);
+        log.scrollTop = log.scrollHeight;
+        $("interimLine").textContent = "";
+      }
+
+      /* ---------------- answer generation (in-browser, facts only) ---------------- */
+      var STOP = {};
+      ("a,an,the,and,or,of,to,in,on,for,with,about,you,your,you've,your,me,my,i,we,our,do,does,did,have,has,had,can,could,would,should,will,what,when,where,why,how,which,who,whom,is,are,was,were,be,been,being,it,its,this,that,these,those,there,here,if,but,as,at,by,from,into,over,under,than,then,so,such,any,some,all,ever,just,really,please,tell,describe,give,example,time,situation,work,working,job,role,company,team,teams,project,projects").split(",").forEach(function(w){ STOP[w]=1; });
+
+      function stem(w){
+        return w.replace(/(ingly|edly|ing|edly|ed|es|s)$/,"");
+      }
+      function keywords(text){
+        var words = (text.toLowerCase().match(/[a-z][a-z\-]{2,}/g) || []);
+        var seen = {}, out = [];
+        words.forEach(function(w){
+          var c = w.replace(/-/g,"");
+          if(STOP[c] || STOP[w]) return;
+          var st = stem(c);
+          if(st.length < 3 || seen[st]) return;
+          seen[st] = 1; out.push({raw:c, stem:st});
+        });
+        return out;
+      }
+      function factScore(fact, kws){
+        var f = " " + fact.toLowerCase() + " ";
+        var score = 0;
+        kws.forEach(function(k){
+          if(f.indexOf(" " + k.raw) >= 0 || f.indexOf(k.raw + " ") >= 0) score += 2;
+          else if(f.indexOf(k.stem) >= 0) score += 1;
+        });
+        return score;
+      }
+      function classify(q){
+        var t = q.toLowerCase();
+        if(/tell me about a time|describe a time|give (me )?(an|a) example|a time when|when you (had|faced|dealt)|example of a time/.test(t)) return "behavioral";
+        if(/how would you|what would you do|if you (had|were|faced)|suppose|imagine/.test(t)) return "situational";
+        if(/why (do you want|should we hire)|tell me about yourself|your (greatest )?(strength|weakness)|where do you see yourself|why did you leave|why are you/.test(t)) return "hr";
+        if(/experience (with|in|using)|which tools|what tools|software|system|platform|methodolog|technical|process (do|you)|how do you (use|work with)/.test(t)) return "technical";
+        if(/tell me about|describe|walk me through/.test(t)) return "behavioral";
+        return "general";
+      }
+      function jdHighlights(){
+        // frequent meaningful words from JD — used only to name what the ROLE emphasises
+        if(!S.jd) return [];
+        var counts = {}, order = [];
+        keywords(S.jd).forEach(function(k){
+          if(!counts[k.stem]){ counts[k.stem]=0; order.push(k); }
+          counts[k.stem]++;
+        });
+        return order.filter(function(k){ return counts[k.stem] >= 2; })
+          .sort(function(a,b){ return counts[b.stem]-counts[a.stem]; }).slice(0,3)
+          .map(function(k){ return k.raw; });
+      }
+
+      var OPENERS = {
+        behavioral: [
+          "Yes — I can give you a real example from my own experience.",
+          "Absolutely. Let me use an example from my work.",
+          "Yes, there's an example that fits that well."
+        ],
+        situational: [
+          "Here's how I would approach that, based on how I've handled similar work.",
+          "My approach would be methodical — and it's grounded in how I've worked before.",
+          "I'd start by getting the facts straight, then act. That approach comes from experience."
+        ],
+        hr: [
+          "Thank you — I'm glad to speak to that directly.",
+          "That's a fair question, and my background speaks to it.",
+          "Let me answer that from what's actually in my background."
+        ],
+        technical: [
+          "Yes — that's covered in my experience.",
+          "I can speak to that from hands-on work.",
+          "That's an area I have direct experience in."
+        ],
+        general: [
+          "Yes — let me answer that from my experience.",
+          "I can speak to that directly.",
+          "Here's my honest answer, from my background."
+        ]
+      };
+      var CONNECTORS = ["Specifically, ", "On top of that, ", "Another relevant piece: ", "I also "];
+      var CLOSERS = [
+        "That's the approach I'd bring to this role as well.",
+        "And I'd bring that same approach here.",
+        "It's experience I'd put to work in this role from day one."
+      ];
+
+      function pickFacts(q){
+        var kws = keywords(q);
+        var scored = S.facts.map(function(f, i){ return {f:f, i:i, s:factScore(f, kws)}; })
+          .filter(function(x){ return x.s > 0; })
+          .sort(function(a,b){ return b.s - a.s || a.i - b.i; });
+        return scored;
+      }
+      function factBudget(){
+        if(S.level === 0) return 1;
+        if(S.level === 2) return S.mode === "quick" ? 2 : 4;
+        if(S.mode === "quick") return 1;
+        if(S.mode === "detailed") return 3;
+        return 2;
+      }
+      function lowerFirst(s){ return s.charAt(0).toLowerCase() + s.slice(1); }
+      function ensureSentence(s){
+        s = s.trim();
+        if(!/[.!?]$/.test(s)) s += ".";
+        return s;
+      }
+
+      function buildAnswer(q){
+        var cls = classify(q);
+        var scored = pickFacts(q);
+        var budget = factBudget();
+        var matched = scored.slice(0, budget).map(function(x){ return x.f; });
+        S.curFacts = matched; S.curClass = cls;
+        var chips = [];
+
+        if(!S.facts.length){
+          return {
+            text: "I haven't pasted my approved profile into this page yet, so I don't have facts to build an answer from. I'll answer honestly and briefly, and I can set up the profile in the full Copilot before the next question round.",
+            chips: ["No profile loaded on this page"]
+          };
+        }
+        if(!matched.length){
+          // honest transferable-skills answer — never invent
+          var nearest = S.facts.slice(0, 1);
+          var txt = "That's not something I have a direct example of in the profile I've prepared, and I'd rather be straight about that than dress something up. ";
+          txt += "What I can speak to is the related work in my background. " + ensureSentence(nearest[0]) + " ";
+          txt += "The skills there — planning the work, keeping people informed, and following through — transfer directly, and it's an area I pick up quickly. I'm happy to walk you through how I'd approach it step by step.";
+          if(S.simple) txt = "I don't have a direct example of that in my background, and I'll be honest about that. The closest experience I have is this: " + ensureSentence(nearest[0]) + " The skills from that work transfer, and I learn new areas quickly.";
+          return { text: txt, chips: ["No direct match in your profile — honest framing", "Transferable skills", "Offer your approach step by step"] };
+        }
+
+        if(S.mode === "star" && cls !== "hr"){
+          var s = matched[0];
+          var a = matched[1] || null;
+          var resFact = null;
+          for(var i=0;i<scored.length;i++){
+            if(/deliver|complet|improv|reduc|increas|sav|achiev|resolv|on time|successful|result/i.test(scored[i].f)){ resFact = scored[i].f; break; }
+          }
+          var lines = [];
+          lines.push({k:"Situation", v: ensureSentence(s)});
+          lines.push({k:"Task", v: "My responsibility was to own that piece of work end to end and keep the right people informed as it moved."});
+          lines.push({k:"Action", v: a ? ensureSentence(a) : "I broke the work into clear steps, set regular check-ins, and dealt with blockers as soon as they came up."});
+          lines.push({k:"Result", v: (resFact && resFact !== s && resFact !== a) ? ensureSentence(resFact) : "The method that came out of it is the one I still use: plan early, communicate often, and escalate blockers fast."});
+          chips = ["STAR structure", "Real example from your profile"];
+          matched.forEach(function(f){ chips.push(shortChip(f)); });
+          return { star: lines, chips: chips.slice(0,5) };
+        }
+
+        var op = OPENERS[cls][S.variant % OPENERS[cls].length];
+        var parts = [op];
+        matched.forEach(function(f, idx){
+          var sentence = ensureSentence(f);
+          if(idx === 0){ parts.push(sentence); }
+          else if(idx === 1){ parts.push("I also " === CONNECTORS[3] ? sentence : CONNECTORS[(S.variant + idx - 1) % 3] + lowerFirst(sentence)); }
+          else { parts.push(CONNECTORS[(S.variant + idx) % CONNECTORS.length] + lowerFirst(sentence)); }
+        });
+        if(S.level === 2){
+          var jdh = jdHighlights();
+          if(jdh.length) parts.push("I know this role puts weight on " + jdh.join(", ") + " — that's the side of my experience I'd lean on most here.");
+          else parts.push("It's an area where my experience is recent and hands-on, not theoretical.");
+        }
+        if(S.mode !== "quick" && S.level > 0) parts.push(CLOSERS[S.variant % CLOSERS.length]);
+        if(S.simple){
+          parts = [op, ensureSentence(matched[0]), "That's the approach I'd bring here too."];
+        }
+        chips = [];
+        if(cls === "behavioral") chips.push("Real example — STAR thinking");
+        if(cls === "situational") chips.push("Lead with your approach");
+        if(cls === "technical") chips.push("Name the actual tools from your profile");
+        if(cls === "hr") chips.push("Stay specific to this role");
+        matched.forEach(function(f){ chips.push(shortChip(f)); });
+        return { text: parts.join(" "), chips: chips.slice(0,5) };
+      }
+      function shortChip(fact){
+        var w = fact.replace(/[.,;:]+$/,"").split(/\s+/).slice(0,5).join(" ");
+        return w.charAt(0).toUpperCase() + w.slice(1);
+      }
+
+      function renderAnswer(){
+        var item = S.history[S.cur];
+        if(!item) return;
+        var built = buildAnswer(item.q);
+        item.built = built;
+        var box = $("answerText");
+        if(built.star){
+          box.innerHTML = built.star.map(function(l){
+            return '<span class="star-line"><span class="star-k">' + l.k + " — </span>" + escapeHtml(l.v) + "</span>";
+          }).join("");
+          item.answer = built.star.map(function(l){ return l.k + ": " + l.v; }).join("\n");
+        } else {
+          box.textContent = built.text;
+          item.answer = built.text;
+        }
+        var chipsEl = $("chips");
+        chipsEl.innerHTML = "";
+        (built.chips || []).forEach(function(c){
+          var s = document.createElement("span");
+          s.className = "chip";
+          s.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6.5" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' + escapeHtml(c);
+          chipsEl.appendChild(s);
+        });
+      }
+
+      function askQuestion(q){
+        q = (q || "").trim();
+        if(q.length < 8) return;
+        hideLiveMsg();
+        S.history.push({q:q, answer:"", time:new Date()});
+        S.cur = S.history.length - 1;
+        S.variant = 0; S.level = (S.mode === "detailed") ? 2 : 1; S.simple = false;
+        $("currentQ").classList.add("show");
+        $("currentQText").textContent = q;
+        renderAnswer();
+        renderHistory();
+      }
+
+      /* ---------------- history UI ---------------- */
+      function renderHistory(){
+        var list = $("historyList");
+        list.innerHTML = "";
+        $("historyEmpty").style.display = S.history.length ? "none" : "block";
+        S.history.forEach(function(item, i){
+          var li = document.createElement("li");
+          var b = document.createElement("button");
+          b.type = "button";
+          if(i === S.cur) b.className = "sel";
+          var hh = item.time.getHours(), mm = item.time.getMinutes();
+          var ts = (hh<10?"0":"")+hh+":"+(mm<10?"0":"")+mm;
+          b.innerHTML = '<span class="h-num">' + (i+1) + '.</span><span>' + escapeHtml(item.q) + '</span><span class="h-time">' + ts + "</span>";
+          b.addEventListener("click", function(){
+            S.cur = i; S.variant = 0; S.level = 1; S.simple = false;
+            $("currentQ").classList.add("show");
+            $("currentQText").textContent = item.q;
+            renderAnswer(); renderHistory();
+          });
+          li.appendChild(b);
+          list.appendChild(li);
+        });
+        $("prevQ").disabled = S.cur <= 0;
+        $("nextQ").disabled = S.cur < 0 || S.cur >= S.history.length - 1;
+      }
+      function stepHistory(d){
+        var n = S.cur + d;
+        if(n < 0 || n >= S.history.length) return;
+        S.cur = n; S.variant = 0; S.level = 1; S.simple = false;
+        $("currentQ").classList.add("show");
+        $("currentQText").textContent = S.history[n].q;
+        renderAnswer(); renderHistory();
+      }
+      $("prevQ").addEventListener("click", function(){ stepHistory(-1); });
+      $("nextQ").addEventListener("click", function(){ stepHistory(1); });
+
+      /* ---------------- answer controls ---------------- */
+      $("regenBtn").addEventListener("click", function(){ if(S.cur>=0){ S.variant++; renderAnswer(); } });
+      $("shorterBtn").addEventListener("click", function(){ if(S.cur>=0){ S.level = 0; renderAnswer(); } });
+      $("detailBtn").addEventListener("click", function(){ if(S.cur>=0){ S.level = 2; renderAnswer(); } });
+      $("simplerBtn").addEventListener("click", function(){ if(S.cur>=0){ S.simple = true; S.level = 1; renderAnswer(); } });
+      $("copyBtn").addEventListener("click", function(){
+        var item = S.history[S.cur];
+        if(!item || !item.answer) return;
+        var done = function(){ flashMsg("Answer copied.", true); };
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(item.answer).then(done, function(){ legacyCopy(item.answer); done(); });
+        } else { legacyCopy(item.answer); done(); }
+      });
+      function legacyCopy(t){
+        var ta = document.createElement("textarea");
+        ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select();
+        try{ document.execCommand("copy"); }catch(e){}
+        document.body.removeChild(ta);
+      }
+      var fontStep = 0;
+      function applyFont(){
+        var sizes = [1.05, 1.2, 1.35, 1.55, 1.8];
+        var idx = Math.min(4, Math.max(0, 2 + fontStep));
+        document.documentElement.style.setProperty("--answer-size", sizes[idx] + "rem");
+      }
+      $("fontUp").addEventListener("click", function(){ fontStep++; applyFont(); });
+      $("fontDown").addEventListener("click", function(){ fontStep--; applyFont(); });
+
+      /* ---------------- live messaging / status ---------------- */
+      function showLiveError(msg){
+        var el = $("liveMsg");
+        el.textContent = msg; el.className = "live-msg show";
+        setStatus("Needs attention", "error");
+      }
+      function flashMsg(msg, info){
+        var el = $("liveMsg");
+        el.textContent = msg; el.className = "live-msg show" + (info ? " info" : "");
+        setTimeout(function(){ if(el.textContent === msg) hideLiveMsg(); }, 2600);
+      }
+      function hideLiveMsg(){ var el = $("liveMsg"); el.textContent=""; el.className = "live-msg"; }
+      function setStatus(text, kind){
+        $("statusText").textContent = text;
+        $("statusChip").className = "status-chip" + (kind ? " " + kind : "");
+      }
+      function updateListeningUI(){
+        var on = S.listening && S.micOn;
+        $("micBtn").classList.toggle("on", on);
+        if(S.engine === "manual"){
+          $("micStateTop").textContent = "Manual mode";
+          $("micStateSub").textContent = "Type each question below";
+          setStatus("Manual entry", "");
+        } else if(S.paused && S.listening){
+          $("micStateTop").textContent = "Paused — you're answering";
+          $("micStateSub").textContent = "Your voice won't trigger new answers";
+          setStatus("Paused while you answer", "paused");
+        } else if(on){
+          $("micStateTop").textContent = "Listening to interview…";
+          $("micStateSub").textContent = "Your answer updates in real time";
+          setStatus("Listening", "listening");
+        } else if(S.listening && !S.micOn){
+          $("micStateTop").textContent = "Microphone off";
+          $("micStateSub").textContent = "Turn the mic back on to resume";
+          setStatus("Mic off", "");
+        } else if(S.engine === "sherpa" && S.sherpaState === "loading"){
+          $("micStateTop").textContent = "Loading Sherpa model…";
+          $("micStateSub").textContent = "Listening starts when the download finishes";
+          setStatus("Loading Sherpa model", "");
+        } else {
+          $("micStateTop").textContent = "Listening off";
+          $("micStateSub").textContent = "Tap the mic to start";
+          setStatus("Not listening", "");
+        }
+      }
+
+      /* ---------------- mic test ---------------- */
+      function setTestStatus(msg, isErr){
+        var el = $("testStatus");
+        el.textContent = msg;
+        el.className = "test-status" + (isErr ? " err" : "");
+      }
+      $("micTestBtn").addEventListener("click", function(){
+        var d = runDiagnostics();
+        if(S.testMode){
+          S.testMode = false; stopRecognition();
+          $("micTestBtn").textContent = "Test microphone";
+          setTestStatus("Test stopped.", false);
+          return;
+        }
+        if(!d.mic){
+          setTestStatus("The microphone API isn't exposed in this view — open this page's own link directly in Chrome or Edge and test there. Manual entry always works.", true);
+          return;
+        }
+        if(S.engine === "sherpa"){
+          if(!wasmOK()){
+            setTestStatus("Sherpa needs WebAssembly, which this browser/view doesn't provide. Chrome or Edge on desktop works best. Manual entry always works.", true);
+            return;
+          }
+        } else if(!srSupported()){
+          setTestStatus("This browser has no Web Speech recognition — Chrome or Edge on desktop works best. Manual entry always works.", true);
+          return;
+        }
+        // permission probe first, so the error is specific
+        if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
+          navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+            stream.getTracks().forEach(function(t){ t.stop(); });
+            beginTest();
+          }).catch(function(err){
+            if(err && err.name === "NotAllowedError"){
+              micBlockedMessage().then(function(m){ setTestStatus(m, true); });
+            } else if(err && (err.name === "NotFoundError" || err.name === "DevicesNotFoundError")){
+              setTestStatus("No microphone was found on this device. Connect one and test again — manual entry always works.", true);
+            } else {
+              setTestStatus("The microphone couldn't be opened (" + (err && err.name ? err.name : "unknown error") + "). Close apps that may be holding it (Teams/Zoom) and try again.", true);
+            }
+          });
+        } else { beginTest(); }
+      });
+      function beginTest(){
+        S.testMode = true;
+        $("micTestBtn").textContent = "Stop test";
+        $("testTranscript").classList.add("show");
+        $("testTranscript").textContent = "";
+        setTestStatus("Listening… read the sample question aloud (or play it from your phone on speaker).", false);
+        if(startRecognition("test") === false){ S.testMode = false; $("micTestBtn").textContent = "Test microphone"; }
+      }
+
+      /* ---------------- live session flow ---------------- */
+      function fmtTime(s){
+        var m = Math.floor(s/60), ss = s % 60;
+        return (m<10?"0":"")+m+":"+(ss<10?"0":"")+ss;
+      }
+      $("startBtn").addEventListener("click", function(){
+        var d = runDiagnostics();
+        parseProfile();
+        S.jd = $("jdInput").value || "";
+        refreshLabels();
+        if(S.testMode){ S.testMode = false; stopRecognition(); $("micTestBtn").textContent = "Test microphone"; }
+        $("setupView").style.display = "none";
+        $("liveView").classList.add("on");
+        $("livePill").classList.add("on");
+        S.timerSec = 0; $("timer").textContent = "00:00";
+        if(S.timerId) clearInterval(S.timerId);
+        S.timerId = setInterval(function(){ S.timerSec++; $("timer").textContent = fmtTime(S.timerSec); }, 1000);
+        window.scrollTo(0,0);
+        if(S.engine === "webspeech"){
+          if(!d.mic){
+            showLiveError("Live listening can't run in this view — the microphone API isn't exposed here (this page is likely open inside another app). Open this page's own link directly in Chrome or Edge for listening. Manual question entry below works right now.");
+          } else if(!srSupported()){
+            showLiveError("This browser has no Web Speech recognition. Chrome or Edge on desktop works best — manual question entry below always works.");
+          } else {
+            startRecognition("live");
+          }
+        } else if(S.engine === "sherpa"){
+          if(!d.mic){
+            showLiveError("Live listening can't run in this view — the microphone API isn't exposed here (this page is likely open inside another app). Sherpa can't bypass that either. Open this page's own link directly in Chrome or Edge for listening. Manual question entry below works right now.");
+          } else {
+            flashMsg("Sherpa selected — if the model hasn't downloaded yet it loads now (~55 MB, first time only), then listening starts.", true);
+            startRecognition("live");
+          }
+        }
+        updateListeningUI();
+      });
+
+      $("endBtn").addEventListener("click", function(){
+        stopRecognition();
+        if(S.timerId){ clearInterval(S.timerId); S.timerId = null; }
+        $("liveView").classList.remove("on");
+        $("livePill").classList.remove("on");
+        $("setupView").style.display = "";
+        setStatus("Not listening", "");
+        window.scrollTo(0,0);
+      });
+
+      $("micBtn").addEventListener("click", function(){
+        if(S.engine === "manual"){ flashMsg("Manual mode is selected — type the question below instead.", true); return; }
+        if(S.listening){ stopRecognition(); }
+        else { hideLiveMsg(); startRecognition("live"); }
+        updateListeningUI();
+      });
+      $("micToggle").addEventListener("click", function(){
+        S.micOn = !S.micOn;
+        this.setAttribute("aria-pressed", S.micOn ? "true" : "false");
+        this.innerHTML = '<span class="dot"></span>Microphone: ' + (S.micOn ? "On" : "Off");
+        if(!S.micOn && S.listening){ stopRecognition(); }
+        else if(S.micOn && !S.listening && S.engine !== "manual"){ startRecognition("live"); }
+        updateListeningUI();
+      });
+      $("pauseBtn").addEventListener("click", function(){
+        S.paused = !S.paused;
+        this.setAttribute("aria-pressed", S.paused ? "true" : "false");
+        this.innerHTML = '<span class="dot"></span>' + (S.paused ? "Paused — tap when the next question starts" : "Pause while I answer");
+        updateListeningUI();
+      });
+
+      $("manualBtn").addEventListener("click", function(){
+        var v = $("manualInput").value;
+        if(v && v.trim().length >= 4){
+          askQuestion(v.trim());
+          $("manualInput").value = "";
+        }
+      });
+      $("manualInput").addEventListener("keydown", function(e){
+        if(e.key === "Enter"){ e.preventDefault(); $("manualBtn").click(); }
+      });
+
+      /* ---------------- init ---------------- */
+      runDiagnostics();
+      setSherpaUI();
+      updateListeningUI();
+      renderHistory();
+    })();
+    </script>
+  </body>
+</html>
