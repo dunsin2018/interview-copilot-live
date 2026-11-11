@@ -172,6 +172,35 @@
         font-weight:700; font-size:.88rem; color:var(--ink-dim); min-height:2.3rem;
       }
       .seg button.sel{ background:#0d3524; color:var(--lime); }
+      /* ---------- Live AI settings ---------- */
+      .ai-card{ margin-bottom:20px; }
+      .ai-card h2 .ai-state{ margin-left:auto; font-size:.74rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase; border-radius:999px; padding:4px 10px; background:#e9e4d2; color:var(--ink-dim); }
+      .ai-card h2 .ai-state.on{ background:#0d3524; color:var(--lime); }
+      .toggle-row{ display:flex; gap:12px; align-items:flex-start; cursor:pointer; margin:4px 0 16px; }
+      .toggle-row .t-text{ font-size:.92rem; font-weight:700; line-height:1.4; }
+      .toggle-row .t-text .hint{ display:block; font-weight:600; }
+      .switch{ position:relative; flex:none; width:50px; height:28px; margin-top:1px; }
+      .switch input{ position:absolute; opacity:0; width:100%; height:100%; margin:0; cursor:pointer; }
+      .switch .sl{ position:absolute; inset:0; border-radius:999px; background:#c9c2ae; transition:background .18s ease; pointer-events:none; }
+      .switch .sl::after{ content:""; position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.25); transition:left .18s ease; }
+      .switch input:checked + .sl{ background:#0d3524; }
+      .switch input:checked + .sl::after{ left:25px; background:var(--lime); }
+      .switch input:focus-visible + .sl{ outline:2px solid var(--lime-dim); outline-offset:2px; }
+      .setup input[type="password"], .setup input[type="url"]{
+        border:1.5px solid #d8d2c2; border-radius:12px; background:var(--cream-card);
+        padding:11px 13px; color:var(--ink); width:100%;
+      }
+      .setup input[type="password"]:focus, .setup input[type="url"]:focus{
+        outline:2px solid var(--lime-dim); outline-offset:1px; border-color:var(--lime-dim);
+      }
+      .ai-actions{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:2px 0 12px; }
+      .ai-test-status{ font-size:.87rem; font-weight:700; color:#3c5a24; }
+      .ai-test-status.err{ color:#9c2b2e; }
+      .ai-privacy{ font-size:.83rem; color:var(--ink-dim); line-height:1.55; margin:0; background:#f1edde; border-radius:10px; padding:10px 12px; }
+      .ai-note{ display:none; margin-top:12px; font-size:.86rem; font-weight:700; color:#f5d48a; background:rgba(245,185,66,.1); border:1px solid rgba(245,185,66,.35); border-radius:10px; padding:9px 12px; }
+      .ai-note.show{ display:block; }
+      .live-ai-badge{ display:none; font-size:.72rem; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--lime-ink); background:var(--lime); border-radius:999px; padding:4px 10px; margin-left:8px; vertical-align:middle; }
+      .live-ai-badge.show{ display:inline-block; }
       .honest-notes{ font-size:.83rem; color:var(--ink-dim); border-top:1px solid #e3ddcc; padding-top:14px; margin-top:2px; }
       .honest-notes p{ margin:0 0 6px; }
       .start-row{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:16px; }
@@ -353,7 +382,7 @@
         <p class="lede">Paste the approved profile you prepared in the full Interview Copilot, then start. This page keeps everything in this tab only — close or reload it and it's gone.</p>
         <div class="privacy-note">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2" stroke="#3c4a2e" stroke-width="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="#3c4a2e" stroke-width="2"/></svg>
-          <span><strong>Private by design:</strong> this page ships empty — no profile, no resume, nothing about you is built in. What you paste below stays in this browser tab's memory. It is never saved and never sent anywhere by this page.</span>
+          <span><strong>Private by design:</strong> this page ships empty — no profile, no resume, nothing about you is built in. What you paste below stays in this browser tab's memory and is never sent anywhere by this page — unless you turn on the optional Live AI answers below, which sends each question plus your pasted profile to the provider you set there.</span>
         </div>
 
         <div class="setup-grid">
@@ -450,8 +479,40 @@
           </div>
         </div>
 
+        <div class="card ai-card" id="aiSettingsCard">
+          <h2>Live AI answers <span class="ai-state" id="aiStateBadge">Off</span></h2>
+          <p class="sub">Optional — bring your own API key. When on, detected questions are composed by a real AI model using only the profile you pasted above. When off, answers stay with the local builder on this page.</p>
+          <label class="toggle-row" for="aiToggle">
+            <span class="switch"><input type="checkbox" id="aiToggle" /><span class="sl" aria-hidden="true"></span></span>
+            <span class="t-text">Live AI answers<span class="hint">Default off. Turn on only for the interview you want AI-composed answers in.</span></span>
+          </label>
+          <div class="field">
+            <label for="aiKeyInput">OpenAI API key</label>
+            <input type="password" id="aiKeyInput" placeholder="Paste your API key" autocomplete="off" spellcheck="false" />
+            <span class="hint">Works with OpenAI or any provider that uses the same chat-completions format — set its address in the endpoint field below.</span>
+          </div>
+          <div class="setup-grid">
+            <div class="field">
+              <label for="aiEndpointInput">API endpoint</label>
+              <input type="text" id="aiEndpointInput" value="https://api.openai.com/v1" autocomplete="off" spellcheck="false" />
+              <span class="hint">Base address only — the page adds <em>/chat/completions</em> when it calls.</span>
+            </div>
+            <div class="field">
+              <label for="aiModelInput">Model</label>
+              <input type="text" id="aiModelInput" value="gpt-4o-mini" autocomplete="off" spellcheck="false" />
+              <span class="hint">For example: gpt-4o-mini (faster, lower cost) or gpt-4o (stronger answers).</span>
+            </div>
+          </div>
+          <div class="ai-actions">
+            <button class="btn btn-dark" id="aiTestBtn" type="button">Test connection</button>
+            <button class="btn btn-ghost light" id="aiForgetBtn" type="button">Forget key</button>
+            <span class="ai-test-status" id="aiTestStatus" role="status"></span>
+          </div>
+          <p class="ai-privacy"><strong>Where your key goes:</strong> your key is stored only in this browser on this device (in localStorage), is sent only to the API endpoint above when a call is made, and this page ships with no key built in. <strong>What is sent when Live AI is on:</strong> each detected question plus the candidate profile you pasted on this page are sent to that provider so it can compose the answer. If you don't want that sent, leave Live AI off — the local answers send nothing.</p>
+        </div>
+
         <div class="honest-notes">
-          <p><strong>How answers work here:</strong> there is no server AI on this page. Suggested answers are assembled in your browser from the profile you pasted — matched to each question by keyword, structured for the mode you picked. They're a strong starting point to read from, not a polished rewrite; the full Copilot inside Muse writes richer answers.</p>
+          <p><strong>How answers work here:</strong> by default there is no server AI on this page. Suggested answers are assembled in your browser from the profile you pasted — matched to each question by keyword, structured for the mode you picked. If you turn on Live AI answers above with your own key, a real model composes the answer instead, still grounded only in your pasted profile — and the local answer remains the automatic fallback if that call fails.</p>
           <p><strong>Honesty rule:</strong> if no pasted fact matches a question, the answer says so and offers a transferable-skills framing instead of inventing experience. Nothing is recorded or stored, and the page makes no sound.</p>
           <p><strong>One disclosure:</strong> Web Speech in Chrome sends your audio to Google's speech service for recognition — that's the browser's engine, not this page sending data anywhere.</p>
           <p><strong>Sherpa disclosure:</strong> with Sherpa selected, recognition runs on this device and audio never leaves it. The engine is the official sherpa-onnx v1.10.46 WebAssembly runtime with the streaming Zipformer English (20M, int8) model, served as separate files with this page and downloaded only when you choose Sherpa (~55 MB in total, then cached by your browser).</p>
@@ -495,10 +556,11 @@
           <div class="panel">
             <div class="panel-head">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3Z" fill="#c9f24e"/></svg>
-              <h2>AI Suggested Answer</h2>
-              <span class="tag">Built in this tab from your pasted profile</span>
+              <h2>AI Suggested Answer<span class="live-ai-badge" id="liveAiBadge">Live AI</span></h2>
+              <span class="tag" id="answerSourceTag">Built in this tab from your pasted profile</span>
             </div>
             <div class="answer-text" id="answerText"><span class="answer-empty">When a question is detected — or you type one below — a suggested answer appears here in large type, built only from the facts you pasted.</span></div>
+            <div class="ai-note" id="aiNote" role="status"></div>
             <div class="chips" id="chips"></div>
             <div class="answer-controls">
               <button class="btn btn-ghost" id="copyBtn" type="button">Copy</button>
@@ -575,7 +637,12 @@
         timerSec:0, timerId:null,
         testMode:false,
         sherpaState:"idle",       // idle | loading | ready | failed
-        sherpaError:""
+        sherpaError:"",
+        aiEnabled:false,
+        aiKey:"",
+        aiEndpoint:"https://api.openai.com/v1",
+        aiModel:"gpt-4o-mini",
+        aiSeq:0                   // increments to invalidate stale AI responses
       };
       window.__sherpaState = {state:"idle", error:""};
 
@@ -756,6 +823,180 @@
 
       function escapeHtml(s){
         return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+      }
+
+      /* ---------------- Live AI settings (bring-your-own key) ----------------
+         The key, endpoint, model and on/off choice persist ONLY in this
+         browser's localStorage on this device, so the user doesn't retype
+         the key every visit. Nothing is baked into the page: it ships with
+         no key, and the values below start empty/default until the user
+         enters their own. localStorage can be blocked in some framed
+         views — every access is guarded and the feature simply falls back
+         to in-tab memory there. */
+      var AI_LS = { enabled:"icl_ai_enabled", key:"icl_ai_key", endpoint:"icl_ai_endpoint", model:"icl_ai_model" };
+      function lsGet(k){ try{ return window.localStorage.getItem(k); }catch(e){ return null; } }
+      function lsSet(k, v){ try{ if(v === null) window.localStorage.removeItem(k); else window.localStorage.setItem(k, v); }catch(e){} }
+      function aiEndpointBase(){
+        var e = (S.aiEndpoint || "").trim().replace(/\/+$/, "");
+        return e || "https://api.openai.com/v1";
+      }
+      function syncAiFromInputs(){
+        S.aiKey = $("aiKeyInput").value.trim();
+        S.aiEndpoint = $("aiEndpointInput").value.trim() || "https://api.openai.com/v1";
+        S.aiModel = $("aiModelInput").value.trim() || "gpt-4o-mini";
+        S.aiEnabled = !!$("aiToggle").checked;
+      }
+      function persistAiSettings(){
+        syncAiFromInputs();
+        lsSet(AI_LS.enabled, S.aiEnabled ? "1" : "0");
+        lsSet(AI_LS.key, S.aiKey ? S.aiKey : null);
+        lsSet(AI_LS.endpoint, S.aiEndpoint);
+        lsSet(AI_LS.model, S.aiModel);
+        refreshAiBadge();
+      }
+      function refreshAiBadge(){
+        var b = $("aiStateBadge");
+        if(!b) return;
+        b.textContent = S.aiEnabled ? "On" : "Off";
+        b.className = "ai-state" + (S.aiEnabled ? " on" : "");
+      }
+      function loadAiSettings(){
+        var en = lsGet(AI_LS.enabled), k = lsGet(AI_LS.key), ep = lsGet(AI_LS.endpoint), mo = lsGet(AI_LS.model);
+        if(k) $("aiKeyInput").value = k;
+        if(ep) $("aiEndpointInput").value = ep;
+        if(mo) $("aiModelInput").value = mo;
+        $("aiToggle").checked = (en === "1");
+        syncAiFromInputs();
+        refreshAiBadge();
+      }
+      function setAiTestStatus(msg, isErr){
+        var el = $("aiTestStatus");
+        el.textContent = msg;
+        el.className = "ai-test-status" + (isErr ? " err" : "");
+      }
+      function providerErrorMessage(data, status){
+        try{
+          if(data && data.error && data.error.message) return String(data.error.message).slice(0, 300);
+          if(data && data.message) return String(data.message).slice(0, 300);
+        }catch(e){}
+        return "HTTP " + status;
+      }
+      async function callChatCompletions(messages, maxTokens){
+        var ctrl = (typeof AbortController === "function") ? new AbortController() : null;
+        var timer = ctrl ? setTimeout(function(){ try{ ctrl.abort(); }catch(e){} }, 20000) : null;
+        try{
+          var res = await fetch(aiEndpointBase() + "/chat/completions", {
+            method:"POST",
+            headers:{ "Content-Type":"application/json", "Authorization":"Bearer " + S.aiKey },
+            body: JSON.stringify({ model: S.aiModel || "gpt-4o-mini", messages: messages, temperature: 0.3, max_tokens: maxTokens || 500 }),
+            signal: ctrl ? ctrl.signal : undefined
+          });
+          var data = null;
+          try{ data = await res.json(); }catch(e){}
+          if(!res.ok) throw new Error(providerErrorMessage(data, res.status));
+          var content = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+          if(!content || !String(content).trim()) throw new Error("the provider returned an empty answer");
+          return String(content).trim();
+        }catch(e){
+          if(e && e.name === "AbortError") throw new Error("the call took longer than 20 seconds");
+          throw e;
+        }finally{
+          if(timer) clearTimeout(timer);
+        }
+      }
+      $("aiToggle").addEventListener("change", persistAiSettings);
+      $("aiToggle").addEventListener("change", function(){ if(S.cur >= 0 && typeof renderAnswer === "function") renderAnswer(); });
+      $("aiKeyInput").addEventListener("input", persistAiSettings);
+      $("aiEndpointInput").addEventListener("input", persistAiSettings);
+      $("aiModelInput").addEventListener("input", persistAiSettings);
+      $("aiForgetBtn").addEventListener("click", function(){
+        $("aiKeyInput").value = "";
+        lsSet(AI_LS.key, null);
+        syncAiFromInputs();
+        setAiTestStatus("Key forgotten — it's cleared from this browser. Live AI will use local answers until you paste a key again.", false);
+      });
+      $("aiTestBtn").addEventListener("click", async function(){
+        persistAiSettings();
+        if(!S.aiKey){ setAiTestStatus("Paste an API key first, then test.", true); return; }
+        var btn = $("aiTestBtn");
+        btn.disabled = true;
+        setAiTestStatus("Testing connection…", false);
+        try{
+          await callChatCompletions([{ role:"user", content:"Reply with OK" }], 10);
+          setAiTestStatus("Connection works — " + (S.aiModel || "gpt-4o-mini") + " responded from " + aiEndpointBase() + ".", false);
+        }catch(e){
+          setAiTestStatus("Connection failed: " + (e && e.message ? e.message : String(e || "unknown error")), true);
+        }finally{
+          btn.disabled = false;
+        }
+      });
+
+      /* ---------------- Live AI answer composition ---------------- */
+      function shouldUseAi(){
+        return !!(S.aiEnabled && S.aiKey && S.aiKey.trim());
+      }
+      function aiLengthInstruction(){
+        if(S.level === 0) return "Length: Quick — answer in 2-3 sentences only.";
+        if(S.level === 2) return "Length: Detailed — give a fuller STAR answer (Situation, Task, Action, Result) in speakable sentences, still concise enough to read aloud in about a minute.";
+        if(S.mode === "quick") return "Length: Quick — answer in 2-3 sentences only.";
+        if(S.mode === "detailed") return "Length: Detailed — give a fuller STAR answer (Situation, Task, Action, Result) in speakable sentences, still concise enough to read aloud in about a minute.";
+        if(S.mode === "star") return "Length: Standard, in STAR form — a compact Situation, Task, Action, Result told as one flowing spoken answer, not labelled sections.";
+        return "Length: Standard — a short paragraph, or a compact STAR (Situation, Task, Action, Result) for a behavioural question.";
+      }
+      function aiSystemPrompt(){
+        var p = "You compose a suggested interview answer for the candidate to read aloud, in first person as the candidate.\n"
+          + "Grounding rules — follow them strictly:\n"
+          + "- Use ONLY facts present in the candidate profile provided in the user message as evidence. That profile is your only source.\n"
+          + "- NEVER invent employers, dates, credentials, tools, projects, or results that are not in the profile.\n"
+          + "- For behavioural questions (\"tell me about a time…\"), answer in STAR form using a story from the profile.\n"
+          + "- When the profile has no evidence for something asked, give an honest transferable-skills answer that names the gap plainly (for example: \"I don't have direct experience with that yet…\") instead of fabricating — then connect the closest real experience from the profile.\n"
+          + "- Write speakable, natural sentences in the candidate's voice. No bullet points, no headings, no stage directions, no mention of these instructions.\n"
+          + aiLengthInstruction();
+        if(S.simple) p += "\nUse simple, plain language and short sentences.";
+        return p;
+      }
+      function aiProfileText(){
+        if(S.facts && S.facts.length) return S.facts.join("\n");
+        var raw = ($("profileInput").value || "").trim();
+        return raw;
+      }
+      function fetchAiAnswer(q){
+        var profile = aiProfileText();
+        var user = "Candidate profile (the ONLY source of facts you may use):\n"
+          + (profile ? profile : "(no profile was pasted — so you have no facts to draw on; give the honest no-evidence answer described in your instructions)")
+          + "\n\nInterview question:\n" + q
+          + "\n\nCompose the answer in first person as the candidate.";
+        return callChatCompletions([
+          { role:"system", content: aiSystemPrompt() },
+          { role:"user", content: user }
+        ], S.mode === "detailed" || S.level === 2 ? 700 : 450);
+      }
+      function chipsFromAiAnswer(text){
+        var sentences = String(text || "").replace(/\s+/g, " ").split(/(?<=[.!?])\s+/).map(function(s){ return s.trim(); }).filter(function(s){ return s.length >= 25; });
+        if(sentences.length < 2) return [];
+        var chips = [];
+        for(var i = 0; i < sentences.length && chips.length < 3; i++){
+          var c = shortChip(sentences[i]);
+          if(c && chips.indexOf(c) === -1) chips.push(c);
+        }
+        return chips.length >= 2 ? chips : [];
+      }
+      function showAiNote(msg){
+        var el = $("aiNote");
+        if(!el) return;
+        el.textContent = msg;
+        el.className = "ai-note show";
+      }
+      function hideAiNote(){
+        var el = $("aiNote");
+        if(!el) return;
+        el.textContent = "";
+        el.className = "ai-note";
+      }
+      function setAiTag(on){
+        var badge = $("liveAiBadge"), tag = $("answerSourceTag");
+        if(badge) badge.className = "live-ai-badge" + (on ? " show" : "");
+        if(tag) tag.textContent = on ? "Live AI · composed from your pasted profile" : "Built in this tab from your pasted profile";
       }
 
       /* ---------------- speech recognition ---------------- */
@@ -1443,9 +1684,17 @@
         return w.charAt(0).toUpperCase() + w.slice(1);
       }
 
-      function renderAnswer(){
-        var item = S.history[S.cur];
-        if(!item) return;
+      function renderChips(list){
+        var chipsEl = $("chips");
+        chipsEl.innerHTML = "";
+        (list || []).forEach(function(c){
+          var s = document.createElement("span");
+          s.className = "chip";
+          s.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6.5" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' + escapeHtml(c);
+          chipsEl.appendChild(s);
+        });
+      }
+      function renderLocalAnswer(item, isFallback){
         var built = buildAnswer(item.q);
         item.built = built;
         var box = $("answerText");
@@ -1458,13 +1707,50 @@
           box.textContent = built.text;
           item.answer = built.text;
         }
-        var chipsEl = $("chips");
-        chipsEl.innerHTML = "";
-        (built.chips || []).forEach(function(c){
-          var s = document.createElement("span");
-          s.className = "chip";
-          s.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6.5" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' + escapeHtml(c);
-          chipsEl.appendChild(s);
+        renderChips(built.chips || []);
+        setAiTag(false);
+        if(isFallback) showAiNote("Live AI unavailable — showing local answer");
+        else hideAiNote();
+      }
+      function renderAiAnswer(item, text){
+        item.answer = text;
+        item.built = null;
+        var box = $("answerText");
+        box.textContent = text;
+        renderChips(chipsFromAiAnswer(text));
+        setAiTag(true);
+        hideAiNote();
+      }
+      function renderAnswer(){
+        var item = S.history[S.cur];
+        if(!item) return;
+        if(!shouldUseAi()){
+          S.aiSeq++;
+          // If Live AI is switched on but no key is saved, this is a fallback, not the normal local mode — say so.
+          renderLocalAnswer(item, !!S.aiEnabled);
+          return;
+        }
+        var cacheKey = [item.q, S.mode, S.level, S.simple ? 1 : 0, S.variant, S.aiModel, aiEndpointBase(), aiProfileText()].join("|");
+        if(item.aiCache && item.aiCache.key === cacheKey){
+          S.aiSeq++;
+          renderAiAnswer(item, item.aiCache.text);
+          return;
+        }
+        var seq = ++S.aiSeq;
+        var box = $("answerText");
+        box.innerHTML = '<span class="answer-empty">AI is composing…</span>';
+        renderChips([]);
+        setAiTag(true);
+        hideAiNote();
+        fetchAiAnswer(item.q).then(function(text){
+          if(seq !== S.aiSeq) return;
+          if(S.cur < 0 || S.history[S.cur] !== item) return;
+          item.aiCache = { key: cacheKey, text: text };
+          renderAiAnswer(item, text);
+        }).catch(function(){
+          if(seq !== S.aiSeq) return;
+          if(S.cur < 0 || S.history[S.cur] !== item) return;
+          renderLocalAnswer(item, true);
         });
       }
 
@@ -1724,6 +2010,7 @@
       });
 
       /* ---------------- init ---------------- */
+      loadAiSettings();
       runDiagnostics();
       setSherpaUI();
       updateListeningUI();
